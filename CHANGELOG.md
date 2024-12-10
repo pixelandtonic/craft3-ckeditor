@@ -4,8 +4,35 @@
 
 ## Unreleased (4.x)
 
+## 4.4.0 - 2024-11-12
+
+- When saving a nested entry within a CKEditor field, the changes are now saved to a draft of the owner element, rather than published immediately. ([craftcms/cms#16002](https://github.com/craftcms/cms/pull/16002), [#308](https://github.com/craftcms/ckeditor/pull/308))
+
+## 4.3.1 - 2024-10-20
+
+- Fixed a bug where sticky toolbars weren’t positioned correctly.
+
+## 4.3.0 - 2024-10-19
+
+- Image toolbars now include an “Edit Image” button. ([#253](https://github.com/craftcms/ckeditor/issues/253))
+- The `ckeditor/convert/redactor` command now ensures that it’s being run interactively.
+- CKEditor container divs now have `data-config` attributes, set to the CKEditor config’s handle. ([#284](https://github.com/craftcms/ckeditor/issues/284))
+- Fixed a bug where page breaks were being lost.
+- Fixed a bug where menus within overflown toolbar items weren’t fully visible. ([#286](https://github.com/craftcms/ckeditor/issues/286))
+- Fixed an error that occurred when editing a nested entry, if it didn’t exist in the primary site. ([#295](https://github.com/craftcms/ckeditor/issues/295))
+
+## 4.2.0 - 2024-08-15
+
 - CKEditor now requires Craft CMS 5.3+.
+- Added the `ckeditor/convert/matrix` command. ([#234](https://github.com/craftcms/ckeditor/pull/234))
 - CKEditor fields can now be merged together. ([#277](https://github.com/craftcms/ckeditor/pull/277))
+- CKEditor configs created via the `ckeditor/convert` command now allow modifying HTML attributes, classes, and styles within the source view, if the Redactor config included the `html` button. ([#264](https://github.com/craftcms/ckeditor/pull/264), [#263](https://github.com/craftcms/ckeditor/issues/263))
+- Added `craft\ckeditor\migrations\BaseConvertMatrixContentMigration`.
+- Fixed a bug where CKEditor fields’ search keywords were including nested entries’ rendered partial templates rather than nested entries’ search keywords.
+- Fixed a bug where nested entries weren’t always getting propagated correctly. ([#254](https://github.com/craftcms/ckeditor/issues/254))
+- Fixed a bug where code blocks created by a Redactor field only had `<pre>` tags with no `<code>` tags inside them. ([#258](https://github.com/craftcms/ckeditor/issues/258))
+- Fixed a bug where dropdown menus didn’t have a maximum height. ([#268](https://github.com/craftcms/ckeditor/issues/268))
+- Fixed a bug where word counts weren’t handling unicode characters correctly. ([#275](https://github.com/craftcms/ckeditor/issues/275))
 
 ## 4.1.0 - 2024-06-12
 

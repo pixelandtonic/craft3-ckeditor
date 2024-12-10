@@ -90,13 +90,21 @@ export default class CraftEntriesUI extends Plugin {
       );
 
       if (modelElement.name === 'craftEntryModel') {
-        const selection = this.editor.model.document.selection;
-        const viewElement = selection.getSelectedElement();
-        const entryId = viewElement.getAttribute('entryId');
-
-        this._showEditEntrySlideout(entryId);
+        this._initEditEntrySlideout(data, modelElement);
       }
     });
+  }
+
+  _initEditEntrySlideout(data = null, modelElement = null) {
+    if (modelElement === null) {
+      const selection = this.editor.model.document.selection;
+      modelElement = selection.getSelectedElement();
+    }
+
+    const entryId = modelElement.getAttribute('entryId');
+    const siteId = modelElement.getAttribute('siteId') ?? null;
+
+    this._showEditEntrySlideout(entryId, siteId, modelElement);
   }
 
   /**
@@ -188,13 +196,36 @@ export default class CraftEntriesUI extends Plugin {
     });
 
     this.listenTo(button, 'execute', (evt) => {
-      const selection = this.editor.model.document.selection;
-      const viewElement = selection.getSelectedElement();
-      const entryId = viewElement.getAttribute('entryId');
-      this._showEditEntrySlideout(entryId);
+      this._initEditEntrySlideout();
     });
 
     return button;
+  }
+
+  /**
+   * Returns Craft.ElementEditor instance that the CKEditor field belongs to.
+   *
+   * @returns {*}
+   */
+  getElementEditor() {
+    const $editorContainer = $(this.editor.ui.view.element).closest(
+      'form,.lp-editor-container',
+    );
+    const elementEditor = $editorContainer.data('elementEditor');
+
+    return elementEditor;
+  }
+
+  /**
+   * Returns HTML of the card by the entry ID.
+   *
+   * @param entryId
+   * @returns {*}
+   * @private
+   */
+  _getCardElement(entryId) {
+    let $container = $(this.editor.ui.element);
+    return $container.find('.element.card[data-id="' + entryId + '"]');
   }
 
   /**
@@ -203,9 +234,63 @@ export default class CraftEntriesUI extends Plugin {
    * @param entryId
    * @private
    */
-  _showEditEntrySlideout(entryId) {
-    Craft.createElementEditor(this.elementType, {
+  _showEditEntrySlideout(entryId, siteId, modelElement) {
+    const editor = this.editor;
+    const elementEditor = this.getElementEditor();
+
+    const slideout = Craft.createElementEditor(this.elementType, null, {
       elementId: entryId,
+      params: {
+        siteId: siteId,
+      },
+      onBeforeSubmit: async () => {
+        let $element = this._getCardElement(entryId);
+        // If the nested element is primarily owned by the canonical entry being edited,
+        // then ensure we're working with a draft and save the nested entry changes to the draft
+        if (
+          $element !== null &&
+          Garnish.hasAttr($element, 'data-owner-is-canonical') &&
+          !elementEditor.settings.isUnpublishedDraft
+        ) {
+          await slideout.elementEditor.checkForm(true, true);
+          let baseInputName = $(editor.sourceElement).attr('name');
+          // mark as dirty
+          if (elementEditor && baseInputName) {
+            await elementEditor.setFormValue(baseInputName, '*');
+          }
+          if (
+            elementEditor.settings.draftId &&
+            slideout.elementEditor.settings.draftId
+          ) {
+            if (!slideout.elementEditor.settings.saveParams) {
+              slideout.elementEditor.settings.saveParams = {};
+            }
+            slideout.elementEditor.settings.saveParams.action =
+              'elements/save-nested-element-for-derivative';
+            slideout.elementEditor.settings.saveParams.newOwnerId =
+              elementEditor.getDraftElementId($element.data('owner-id'));
+          }
+        }
+      },
+      onSubmit: (ev) => {
+        let $element = this._getCardElement(entryId);
+        if ($element !== null && ev.data.id != $element.data('id')) {
+          // swap the element with the new one
+          $element
+            .attr('data-id', ev.data.id)
+            .data('id', ev.data.id)
+            .data('owner-id', ev.data.ownerId);
+
+          // and tell CKE about it
+          editor.editing.model.change((writer) => {
+            writer.setAttribute('entryId', ev.data.id, modelElement);
+            editor.ui.update();
+          });
+
+          // and refresh the card
+          Craft.refreshElementInstances(ev.data.id);
+        }
+      },
     });
   }
 
@@ -225,10 +310,7 @@ export default class CraftEntriesUI extends Plugin {
       typeId: entryTypeId,
     });
 
-    const $editorContainer = $(editor.ui.view.element).closest(
-      'form,.lp-editor-container',
-    );
-    const elementEditor = $editorContainer.data('elementEditor');
+    const elementEditor = this.getElementEditor();
 
     if (elementEditor) {
       await elementEditor.markDeltaNameAsModified(editor.sourceElement.name);
@@ -259,12 +341,14 @@ export default class CraftEntriesUI extends Plugin {
       draftId: data.element.draftId,
       params: {
         fresh: 1,
+        siteId: data.element.siteId,
       },
     });
 
     slideout.on('submit', (ev) => {
       editor.commands.execute('insertEntry', {
         entryId: ev.data.id,
+        siteId: ev.data.siteId,
       });
     });
   }

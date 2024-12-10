@@ -43,6 +43,7 @@ use craft\helpers\Db;
 use craft\helpers\ElementHelper;
 use craft\helpers\Html;
 use craft\helpers\Json;
+use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\htmlfield\events\ModifyPurifierConfigEvent;
 use craft\htmlfield\HtmlField;
@@ -142,6 +143,14 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             ->sortBy('title')
             ->values()
             ->all();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public static function phpType(): string
+    {
+        return sprintf('%s|null', FieldData::class);
     }
 
     /**
@@ -360,14 +369,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
         }
 
         if ($resave) {
-            // set resaving=true to avoid our EVENT_AFTER_PROPAGATE handler from dealing with the owner recursively,
-            // and to avoid a new revision getting created.
-            $resaving = $owner->resaving;
-            $owner->resaving = true;
-
             Craft::$app->getElements()->saveElement($owner, false, $propagate, false);
-
-            $owner->resaving = $resaving;
         }
     }
 
@@ -492,7 +494,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
                     $value = strip_tags((string)$element->getFieldValue($this->handle));
                     if (
                         // regex copied from the WordCount plugin, for consistency
-                        preg_match_all('/(?:[\p{L}\p{N}]+\S?)+/', $value, $matches) &&
+                        preg_match_all('/(?:[\p{L}\p{N}]+\S?)+/u', $value, $matches) &&
                         count($matches[0]) > $this->wordLimit
                     ) {
                         $element->addError(
@@ -702,13 +704,41 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             $value = $value->getRawContent();
         }
 
-        if ($value !== null) {
-            // Redactor to CKEditor syntax for <figure>
-            // (https://github.com/craftcms/ckeditor/issues/96)
-            $value = $this->_normalizeFigures($value);
+        if (!$value) {
+            return null;
         }
 
-        return parent::serializeValue($value, $element);
+        // Redactor to CKEditor syntax for <figure>
+        // (https://github.com/craftcms/ckeditor/issues/96)
+        $value = $this->_normalizeFigures($value);
+
+        // Protect page breaks
+        $this->escapePageBreaks($value);
+        $value = parent::serializeValue($value, $element);
+        return str_replace(
+            '{PAGEBREAK_MARKER}',
+            '<div class="page-break" style="page-break-after:always;"><span style="display:none;">&nbsp;</span></div>',
+            $value,
+        );
+    }
+
+    private function escapePageBreaks(string &$html): void
+    {
+        $offset = 0;
+        $r = '';
+
+        while (($pos = stripos($html, '<div class="page-break"', $offset)) !== false) {
+            $endPos = strpos($html, '</div>', $pos + 23);
+            if ($endPos === false) {
+                break;
+            }
+            $r .= substr($html, $offset, $pos - $offset) . '{PAGEBREAK_MARKER}';
+            $offset = $endPos + 6;
+        }
+
+        if ($offset !== 0) {
+            $html = $r . substr($html, $offset);
+        }
     }
 
     /**
@@ -872,6 +902,8 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
                     ...(!empty($transforms) ? ['transformImage', '|'] : []),
                     'toggleImageCaption',
                     'imageTextAlternative',
+                    '|',
+                    'imageEditor',
                 ],
             ],
             'assetSources' => $this->_assetSources(),
@@ -886,7 +918,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             ],
             'transforms' => $transforms,
             'ui' => [
-                'viewportOffset' => ['top' => 50],
+                'viewportOffset' => ['top' => 44],
                 'poweredBy' => [
                     'position' => 'inside',
                     'label' => '',
@@ -1009,6 +1041,7 @@ JS,
             ]),
             'data' => [
                 'element-id' => $element?->id,
+                'config' => $this->ckeConfig,
             ],
         ]);
     }
@@ -1090,6 +1123,7 @@ JS,
                     return Html::tag('craft-entry', options: [
                         'data' => [
                             'entry-id' => $entry->isProvisionalDraft ? $entry->getCanonicalId() : $entry->id,
+                            'site-id' => $entry->siteId,
                             'card-html' => $cardHtml,
                         ],
                     ]);
@@ -1112,9 +1146,36 @@ JS,
             // Redactor to CKEditor syntax for <figure>
             // (https://github.com/craftcms/ckeditor/issues/96)
             $value = $this->_normalizeFigures($value);
+            // Redactor to CKEditor syntax for <pre>
+            // (https://github.com/craftcms/ckeditor/issues/258)
+            $value = $this->_normalizePreTags($value);
         }
 
         return parent::prepValueForInput($value, $element);
+    }
+
+    /**
+     * @innheritdoc
+     */
+    protected function searchKeywords(mixed $value, ElementInterface $element): string
+    {
+        /** @var FieldData|null $value */
+        if (!$value) {
+            return '';
+        }
+
+        $keywords = $value->getChunks()
+            ->filter(fn(BaseChunk $chunk) => $chunk instanceof Markup)
+            ->map(fn(Markup $chunk) => $chunk->getHtml())
+            ->join(' ');
+
+        if (!Craft::$app->getDb()->getSupportsMb4()) {
+            $keywords = StringHelper::encodeMb4($keywords);
+        }
+
+        $keywords .= self::entryManager($this)->getSearchKeywords($element);
+
+        return $keywords;
     }
 
     /**
@@ -1217,6 +1278,39 @@ JS,
             },
             $value,
         );
+
+        return $value;
+    }
+
+    /**
+     * Normalizes <pre> tags, ensuring they have a <code> tag inside them.
+     * If there's no <code> tag in there, ensure it's added with class="language-plaintext".
+     *
+     * @param string $value
+     * @return string
+     */
+    private function _normalizePreTags(string $value): string
+    {
+        $offset = 0;
+        while (preg_match('/<pre\b[^>]*>\s*(.*?)<\/pre>/is', $value, $match, PREG_OFFSET_CAPTURE, $offset)) {
+            /** @var int $startPos */
+            $startPos = $match[1][1];
+            $endPos = $startPos + strlen($match[1][0]);
+            $preContent = $match[1][0];
+
+            // if there's already a <code tag inside, leave it alone and carry on
+            if (str_starts_with($preContent, '<code')) {
+                $offset = $startPos + strlen($preContent);
+                continue;
+            }
+
+            $preContent = Html::tag('code', $preContent, [
+                'class' => 'language-plaintext',
+            ]);
+
+            $value = substr($value, 0, $startPos) . $preContent . substr($value, $endPos);
+            $offset = $startPos + strlen($preContent);
+        }
 
         return $value;
     }
@@ -1489,6 +1583,9 @@ JS,
      */
     private function _adjustPurifierConfig(HTMLPurifier_Config $purifierConfig): HTMLPurifier_Config
     {
+        /** @var HTMLPurifier_HTMLDefinition|null $def */
+        $def = $purifierConfig->getDefinition('HTML', true);
+
         $ckeConfig = $this->_ckeConfig();
 
         // These will come back as indexed (key => true) arrays
@@ -1512,8 +1609,6 @@ JS,
 
         if (in_array('todoList', $ckeConfig->toolbar)) {
             // Add input[type=checkbox][disabled][checked] to the definition
-            /** @var HTMLPurifier_HTMLDefinition|null $def */
-            $def = $purifierConfig->getDefinition('HTML', true);
             $def?->addElement('input', 'Inline', 'Inline', '', [
                 'type' => 'Enum#checkbox',
                 'disabled' => 'Enum#disabled',
@@ -1522,20 +1617,14 @@ JS,
         }
 
         if (in_array('numberedList', $ckeConfig->toolbar)) {
-            /** @var HTMLPurifier_HTMLDefinition|null $def */
-            $def = $purifierConfig->getDefinition('HTML', true);
             $def?->addAttribute('ol', 'style', 'Text');
         }
 
         if (in_array('bulletedList', $ckeConfig->toolbar)) {
-            /** @var HTMLPurifier_HTMLDefinition|null $def */
-            $def = $purifierConfig->getDefinition('HTML', true);
             $def?->addAttribute('ul', 'style', 'Text');
         }
 
         if (in_array('createEntry', $ckeConfig->toolbar)) {
-            /** @var HTMLPurifier_HTMLDefinition|null $def */
-            $def = $purifierConfig->getDefinition('HTML', true);
             $def?->addElement('craft-entry', 'Inline', 'Inline', '', [
                 'data-entry-id' => 'Number',
             ]);

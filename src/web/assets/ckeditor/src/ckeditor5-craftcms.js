@@ -57,6 +57,7 @@ import {WordCount} from '@ckeditor/ckeditor5-word-count';
 import {default as CraftImageInsertUI} from './image/imageinsert/imageinsertui';
 import {default as CraftLinkUI} from './link/linkui';
 import ImageTransform from './image/imagetransform';
+import ImageEditor from './image/imageeditor';
 import {TextPartLanguage} from '@ckeditor/ckeditor5-language';
 import CraftEntries from './entries/entries';
 import CKEditorInspector from '@ckeditor/ckeditor5-inspector';
@@ -116,6 +117,7 @@ const allPlugins = [
   WordCount,
   CraftImageInsertUI,
   ImageTransform,
+  ImageEditor,
   CraftLinkUI,
   CraftEntries,
 ];
@@ -185,6 +187,7 @@ const pluginButtonMap = [
       'ImageStyle',
       'ImageToolbar',
       'ImageTransform',
+      'ImageEditor',
       'LinkImage',
     ],
     buttons: ['insertImage'],
@@ -415,6 +418,8 @@ const handleClipboard = function (editor, plugins) {
         let duplicatedContent = pasteContent;
         let errors = false;
         const siteId = Craft.siteId;
+        let ownerId = null;
+        let layoutElementUid = null;
         const editorData = editor.getData();
         const matches = [...pasteContent.matchAll(/data-entry-id="([0-9]+)/g)];
 
@@ -422,6 +427,21 @@ const handleClipboard = function (editor, plugins) {
         // we need to get duplicates and update the content snippet that's being pasted in
         // before we can call further events
         event.stop();
+
+        const $editorElement = $(editor.ui.view.element);
+        const $parentForm = $editorElement.parents('form');
+        let elementEditor = $parentForm.data('elementEditor');
+
+        // ensure we're working with a draft
+        await elementEditor.ensureIsDraftOrRevision();
+
+        // get the target owner id, in case we're pasting to a different element all together
+        ownerId = elementEditor.settings.elementId;
+
+        // get the target field id, in case we're pasting to a different field all together (not different instance, different field)
+        layoutElementUid = $editorElement
+          .parents('.field')
+          .data('layoutElement');
 
         // for each nested entry ID we found
         for (let i = 0; i < matches.length; i++) {
@@ -466,6 +486,8 @@ const handleClipboard = function (editor, plugins) {
                     entryId: entryId,
                     siteId: siteId,
                     targetEntryTypeIds: targetEntryTypeIds,
+                    targetOwnerId: ownerId,
+                    targetLayoutElementUid: layoutElementUid,
                   },
                 },
               )
