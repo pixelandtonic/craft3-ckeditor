@@ -103,4 +103,13 @@ config.module.rules = config.module.rules
     }),
   ]);
 
-module.exports = config;
+module.exports = (env, argv) => {
+  // Don't minify in dev
+  if (argv.mode === 'development') {
+    config.optimization = {
+      minimize: false,
+    };
+  }
+
+  return config;
+};

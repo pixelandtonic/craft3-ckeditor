@@ -110,7 +110,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
      * @var NestedElementManager[]
      */
     private static array $entryManagers = [];
-    
+
     /**
      * @inheritdoc
      */
