@@ -243,6 +243,11 @@ export default class CraftEntriesUI extends Plugin {
       params: {
         siteId: siteId,
       },
+      onLoad: () => {
+        slideout.elementEditor.on('update', () => {
+          Craft.Preview.refresh();
+        });
+      },
       onBeforeSubmit: async () => {
         let $element = this._getCardElement(entryId);
         // If the nested element is primarily owned by the canonical entry being edited,
