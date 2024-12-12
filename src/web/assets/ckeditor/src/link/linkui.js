@@ -4,7 +4,17 @@
  * @license GPL-3.0-or-later
  */
 
-import {addListToDropdown, Collection, ContextualBalloon, createDropdown, LinkUI, Plugin, Range, SplitButtonView, ViewModel} from 'ckeditor5';
+import {
+  addListToDropdown,
+  Collection,
+  ContextualBalloon,
+  createDropdown,
+  LinkUI,
+  Plugin,
+  Range,
+  SplitButtonView,
+  ViewModel,
+} from 'ckeditor5';
 
 /**
  * These imports aren't ideal but are necessary for now because the main
