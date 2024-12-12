@@ -10,10 +10,8 @@
 
 const {getConfig} = require('@craftcms/webpack');
 const path = require('path');
-const fs = require('fs');
-const {DllReferencePlugin, ProvidePlugin} = require('webpack');
+const {ProvidePlugin} = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 const {
   CKEditorTranslationsPlugin,
 } = require('@ckeditor/ckeditor5-dev-translations');
@@ -23,9 +21,6 @@ const {
 } = require('@ckeditor/ckeditor5-package-tools/lib/utils/webpack-utils');
 const packageRoot = path.resolve(__dirname, '..', '..', '..', '..');
 const moduleResolutionPaths = getModuleResolutionPaths(packageRoot);
-const ckeditor5manifestPath = require.resolve(
-  'ckeditor5/build/ckeditor5-dll.manifest.json',
-);
 
 const config = getConfig({
   context: __dirname,
@@ -58,18 +53,6 @@ const config = getConfig({
       modules: moduleResolutionPaths,
     },
     plugins: [
-      new CopyWebpackPlugin({
-        patterns: [
-          {
-            from: require.resolve('ckeditor5/build/ckeditor5-dll.js'),
-          },
-        ],
-      }),
-      new DllReferencePlugin({
-        manifest: require(ckeditor5manifestPath),
-        scope: 'ckeditor5/src',
-        name: 'CKEditor5.dll',
-      }),
       new ProvidePlugin({
         process: 'process/browser',
         Buffer: ['buffer', 'Buffer'],
