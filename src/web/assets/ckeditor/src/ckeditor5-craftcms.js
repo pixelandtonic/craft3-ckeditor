@@ -4,71 +4,75 @@
  * @license GPL-3.0-or-later
  */
 
+import 'ckeditor5/ckeditor5.css';
 import './ckeditor5-craftcms.css';
-import {Alignment} from '@ckeditor/ckeditor5-alignment';
 import {
+  Alignment,
+  Autoformat,
   AutoImage,
+  AutoLink,
+  BlockQuote,
+  Bold,
+  ClassicEditor,
+  Clipboard,
+  Code,
+  CodeBlock,
+  Essentials,
+  FindAndReplace,
+  Font,
+  GeneralHtmlSupport,
+  Heading,
+  HorizontalLine,
+  HtmlComment,
+  HtmlEmbed,
   Image,
   ImageCaption,
   ImageStyle,
   ImageToolbar,
-} from '@ckeditor/ckeditor5-image';
-import {Autoformat} from '@ckeditor/ckeditor5-autoformat';
-import {BlockQuote} from '@ckeditor/ckeditor5-block-quote';
-import {
-  Bold,
-  Code,
+  Indent,
+  IndentBlock,
   Italic,
+  LinkEditing,
+  LinkImage,
+  List,
+  ListProperties,
+  MediaEmbed,
+  MediaEmbedToolbar,
+  PageBreak,
+  Paragraph,
+  PasteFromOffice,
+  RemoveFormat,
+  SelectAll,
+  SourceEditing,
   Strikethrough,
+  Style,
   Subscript,
   Superscript,
-  Underline,
-} from '@ckeditor/ckeditor5-basic-styles';
-import {ClassicEditor} from '@ckeditor/ckeditor5-editor-classic';
-import {CodeBlock} from '@ckeditor/ckeditor5-code-block';
-import {Essentials} from '@ckeditor/ckeditor5-essentials';
-import {FindAndReplace} from '@ckeditor/ckeditor5-find-and-replace';
-import {Font} from '@ckeditor/ckeditor5-font';
-import {
-  GeneralHtmlSupport,
-  HtmlComment,
-} from '@ckeditor/ckeditor5-html-support';
-import {Heading} from '@ckeditor/ckeditor5-heading';
-import {HorizontalLine} from '@ckeditor/ckeditor5-horizontal-line';
-import {HtmlEmbed} from '@ckeditor/ckeditor5-html-embed';
-import {Indent, IndentBlock} from '@ckeditor/ckeditor5-indent';
-import {LinkEditing, AutoLink, LinkImage} from '@ckeditor/ckeditor5-link';
-import {List, ListProperties, TodoList} from '@ckeditor/ckeditor5-list';
-import {MediaEmbed, MediaEmbedToolbar} from '@ckeditor/ckeditor5-media-embed';
-import {PageBreak} from '@ckeditor/ckeditor5-page-break';
-import {PasteFromOffice} from '@ckeditor/ckeditor5-paste-from-office';
-import {RemoveFormat} from '@ckeditor/ckeditor5-remove-format';
-import {SourceEditing} from '@ckeditor/ckeditor5-source-editing';
-import {Style} from '@ckeditor/ckeditor5-style';
-import {
   Table,
   TableCaption,
   TableCellProperties,
   TableProperties,
   TableToolbar,
   TableUI,
-} from '@ckeditor/ckeditor5-table';
-import {WordCount} from '@ckeditor/ckeditor5-word-count';
+  TextPartLanguage,
+  TodoList,
+  Underline,
+  WordCount,
+} from 'ckeditor5';
 import {default as CraftImageInsertUI} from './image/imageinsert/imageinsertui';
 import {default as CraftLinkUI} from './link/linkui';
 import ImageTransform from './image/imagetransform';
 import ImageEditor from './image/imageeditor';
-import {TextPartLanguage} from '@ckeditor/ckeditor5-language';
 import CraftEntries from './entries/entries';
 import CKEditorInspector from '@ckeditor/ckeditor5-inspector';
-import {Anchor} from '@northernco/ckeditor5-anchor-drupal';
+// import {Anchor} from '@northernco/ckeditor5-anchor-drupal';
 
 const allPlugins = [
-  CKEditor5.paragraph.Paragraph,
-  CKEditor5.selectAll.SelectAll,
-  CKEditor5.clipboard.Clipboard,
+  Paragraph,
+  SelectAll,
+  Clipboard,
   Alignment,
-  Anchor,
+  // Anchor,
   AutoImage,
   AutoLink,
   Autoformat,
@@ -149,7 +153,7 @@ export const toolbarItems = normalizeToolbarItems([
   'superscript',
   'code',
   'link',
-  'anchor',
+  // 'anchor',
   'textPartLanguage',
   {button: 'fontSize', configOption: 'fontSize'},
   'fontFamily',
@@ -177,11 +181,11 @@ export const toolbarItems = normalizeToolbarItems([
 
 const pluginButtonMap = [
   {plugins: ['Alignment'], buttons: ['alignment']},
-  {plugins: ['Anchor'], buttons: ['anchor']},
+  // {plugins: ['Anchor'], buttons: ['anchor']},
   {
     plugins: [
       'AutoImage',
-      'CraftImageInsertUI',
+      // 'CraftImageInsertUI',
       'Image',
       'ImageCaption',
       'ImageStyle',
@@ -246,9 +250,9 @@ const pluginButtonMap = [
 ];
 
 const findPlugin = (pluginName) => {
-  for (const [k, v] of Object.entries(CKEditor5)) {
+  for (const [_, v] of Object.entries(CKEditor5)) {
     if (typeof v === 'object') {
-      for (const [k2, v2] of Object.entries(v)) {
+      for (const [_, v2] of Object.entries(v)) {
         if (typeof v2 === 'function' && v2.pluginName === pluginName) {
           return v2;
         }
@@ -557,6 +561,8 @@ export const create = async function (element, config) {
   if (typeof element === 'string') {
     element = document.querySelector(`#${element}`);
   }
+
+  config.licenseKey = 'GPL';
 
   const editor = await ClassicEditor.create(
     element,

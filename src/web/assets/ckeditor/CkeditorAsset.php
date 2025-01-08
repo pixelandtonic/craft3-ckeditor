@@ -46,7 +46,6 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
      * @inheritdoc
      */
     public $js = [
-        'ckeditor5-dll.js',
         'ckeditor5-craftcms.js',
     ];
 
