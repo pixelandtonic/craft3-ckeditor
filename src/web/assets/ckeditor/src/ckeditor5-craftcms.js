@@ -6,7 +6,8 @@
 
 import 'ckeditor5/ckeditor5.css';
 import './ckeditor5-craftcms.css';
-import {
+import * as CKEditor5 from 'ckeditor5';
+const {
   Alignment,
   Autoformat,
   AutoImage,
@@ -58,7 +59,7 @@ import {
   TodoList,
   Underline,
   WordCount,
-} from 'ckeditor5';
+} = CKEditor5;
 import {default as CraftImageInsertUI} from './image/imageinsert/imageinsertui';
 import {default as CraftLinkUI} from './link/linkui';
 import ImageTransform from './image/imagetransform';

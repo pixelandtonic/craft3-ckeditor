@@ -3,8 +3,8 @@ import {resolve} from 'path';
 
 export default defineConfig({
   build: {
-    outDir: resolve(__dirname, 'build'),
-    emptyOutDir: false,
+    outDir: resolve(__dirname, 'dist'),
+    emptyOutDir: true,
     assetsDir: '',
     lib: {
       entry: {

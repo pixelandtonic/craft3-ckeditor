@@ -1,38 +1,34 @@
 {
   "name": "@craftcms/ckeditor",
   "private": true,
-  "main": "webpack.config.js",
   "type": "module",
   "browserslist": [
     "extends @craftcms/browserslist-config"
   ],
   "devDependencies": {
-    "@ckeditor/ckeditor5-dev-translations": "^43.0.1",
     "@ckeditor/ckeditor5-inspector": ">=4.1.0",
-    "@ckeditor/ckeditor5-package-tools": "^1.0.0",
-    "@craftcms/sass": "^1.1.0",
-    "@craftcms/webpack": "^1.1.2",
     "@northernco/ckeditor5-anchor-drupal": "^0.5.0",
     "ckeditor5": ">=41.0.0",
-    "copy-webpack-plugin": "^12.0.2",
     "husky": "^9.0.10",
-    "jquery": "^3.7.1",
     "lint-staged": "^15.2.1",
     "prettier": "^3.2.4",
-    "terser-webpack-plugin": "^5.3.10",
     "vite": "^6.0.7"
   },
   "peerDependencies": {
-    "jquery": ">=3.0"
+    "glob": ">= 11.0"
   },
   "scripts": {
     "prebuild": "npm run fix-prettier",
-    "build": "webpack --node-env=production --progress",
-    "dev": "webpack --node-env=dev --mode=development --progress",
     "build:config": "vite build -c ./src/web/assets/ckeconfig/vite.config.js",
     "build:field": "vite build -c ./src/web/assets/ckeditor/vite.config.js",
-    "build:vite": "npm run build:config && npm run build:field",
-    "serve": "webpack-dev-server --node-env=development",
+    "build": "npm run build:config && npm run build:field",
+    "postbuild": "npm run copy:lib",
+    "dev": "npm run build:config -- -w --mode=development && npm run build:field -- -w --mode=development",
+    "postdev": "npm run copy:lib",
+    "precopy:lib": "rm -r ./src/web/assets/ckeditor/dist/lib || true",
+    "copy:lib": "npm run copy:browser && npm run copy:translations",
+    "copy:browser": "cp -r ./node_modules/ckeditor5/dist/browser/ ./src/web/assets/ckeditor/dist/lib",
+    "copy:translations": "cp -r ./node_modules/ckeditor5/dist/translations/ ./src/web/assets/ckeditor/dist/lib/translations",
     "check-prettier": "prettier --check .",
     "fix-prettier": "prettier --write .",
     "prepare": "husky install"

@@ -34,7 +34,7 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
     /**
      * @inheritdoc
      */
-    public $sourcePath = __DIR__ . '/build';
+    public $sourcePath = __DIR__ . '/dist';
 
     /**
      * @inheritdoc
@@ -81,6 +81,7 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
 
             $view->registerJsImport('ckeditor5', $this->baseUrl . '/lib/ckeditor5.js');
             $view->registerJsImport('ckeditor5/', $this->baseUrl . '/lib/');
+            $view->registerJsImport('ckeditor5/translations/', $this->baseUrl . '/lib/translations/');
             $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($this, 'ckeditor5-craftcms.js'));
 
             $view->registerJsWithVars(fn($attach) => <<<JS
