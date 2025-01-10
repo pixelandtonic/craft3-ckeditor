@@ -84,12 +84,15 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
     public function registerPackage(View $view): void
     {
         if (!empty($this->pluginNames) || !empty($this->toolbarItems)) {
-            $view->registerJsWithVars(fn($package) => "CKEditor5.craftcms.registerPackage($package);", [
+            $view->registerScriptWithVars(fn($package) => <<<JS
+import {registerPackage} from '@craftcms/ckeditor';
+registerPackage($package);
+JS, [
                 [
                     'pluginNames' => $this->pluginNames,
                     'toolbarItems' => $this->toolbarItems,
                 ],
-            ], View::POS_END);
+            ], View::POS_END, ['type' => 'module']);
         }
     }
 

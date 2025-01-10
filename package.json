@@ -2,6 +2,7 @@
   "name": "@craftcms/ckeditor",
   "private": true,
   "main": "webpack.config.js",
+  "type": "module",
   "browserslist": [
     "extends @craftcms/browserslist-config"
   ],
@@ -15,14 +16,22 @@
     "ckeditor5": ">=41.0.0",
     "copy-webpack-plugin": "^12.0.2",
     "husky": "^9.0.10",
+    "jquery": "^3.7.1",
     "lint-staged": "^15.2.1",
     "prettier": "^3.2.4",
-    "terser-webpack-plugin": "^5.3.10"
+    "terser-webpack-plugin": "^5.3.10",
+    "vite": "^6.0.7"
+  },
+  "peerDependencies": {
+    "jquery": ">=3.0"
   },
   "scripts": {
     "prebuild": "npm run fix-prettier",
     "build": "webpack --node-env=production --progress",
     "dev": "webpack --node-env=dev --mode=development --progress",
+    "build:config": "vite build -c ./src/web/assets/ckeconfig/vite.config.js",
+    "build:field": "vite build -c ./src/web/assets/ckeditor/vite.config.js",
+    "build:vite": "npm run build:config && npm run build:field",
     "serve": "webpack-dev-server --node-env=development",
     "check-prettier": "prettier --check .",
     "fix-prettier": "prettier --write .",

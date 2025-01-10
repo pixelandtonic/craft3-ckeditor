@@ -149,7 +149,8 @@
   {% endblock %}
 {% endembed %}
 
-{% js %}
+{% script with {type: 'module'} %}
+import {pluginNames} from '@craftcms/ckeditor';
 (() => {
   // Register the config options JSON schema
   const jsonSchemaUri = {{ jsonSchemaUri|json_encode|raw }};
@@ -157,7 +158,7 @@
     JSON.stringify({{ jsonSchema|json_encode|raw }})
       .replace(
         new RegExp(Craft.escapeRegex(JSON.stringify('__PLUGIN_LIST__')), 'g'),
-        JSON.stringify(CKEditor5.craftcms.pluginNames())
+        JSON.stringify(pluginNames())
       )
   );
 
@@ -172,7 +173,7 @@
     ],
   });
 })()
-{% endjs %}
+{% endscript %}
 
 {{ codeEditor.textareaField(
   {

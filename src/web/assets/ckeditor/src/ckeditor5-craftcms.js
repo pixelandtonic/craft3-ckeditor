@@ -126,6 +126,12 @@ const allPlugins = [
   CraftEntries,
 ];
 
+export let localizedRefHandles = [];
+
+export function setLocalizedRefHandles(handles) {
+  localizedRefHandles = handles;
+}
+
 const normalizeToolbarItem = (group) => {
   if (!$.isArray(group)) {
     group = [group];

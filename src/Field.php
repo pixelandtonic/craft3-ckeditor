@@ -110,7 +110,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
      * @var NestedElementManager[]
      */
     private static array $entryManagers = [];
-    
+
     /**
      * @inheritdoc
      */
@@ -961,7 +961,8 @@ JS;
         $showWordCountJs = Json::encode($this->showWordCount);
         $wordLimitJs = $this->wordLimit ?: 0;
 
-        $view->registerJs(<<<JS
+        $view->registerScript(<<<JS
+import {create} from '@craftcms/ckeditor';
 (($) => {
   const config = Object.assign($baseConfigJs, $configOptionsJs);
   if (!jQuery.isPlainObject(config.toolbar)) {
@@ -1012,10 +1013,11 @@ JS;
     }
     config.removePlugins.push(...extraRemovePlugins);
   }
-  CKEditor5.craftcms.create($idJs, config);
+  create($idJs, config);
 })(jQuery)
 JS,
             View::POS_END,
+            ['type' => 'module']
         );
 
         if ($ckeConfig->css) {

@@ -16,6 +16,7 @@ use craft\helpers\StringHelper;
 use craft\web\assets\admintable\AdminTableAsset;
 use craft\web\Controller;
 use craft\web\CpScreenResponseBehavior;
+use craft\web\View;
 use yii\base\InvalidArgumentException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
@@ -93,17 +94,16 @@ class CkeConfigsController extends Controller
                 ]);
 
                 $this->view->registerAssetBundle(CkeConfigAsset::class);
-                $this->view->registerJsWithVars(
-                    fn(
-                        $toolbarBuilderId,
-                        $configOptionsId,
-                        $containerId,
-                        $jsonSchemaUri,
-                    ) => <<<JS
-(() => {
-  const configOptions = new CKEditor5.craftcms.ConfigOptions($configOptionsId, $jsonSchemaUri);
-  new CKEditor5.craftcms.ToolbarBuilder($toolbarBuilderId, $containerId, configOptions);
-})();
+                $this->view->registerScriptWithVars(fn(
+                    $toolbarBuilderId,
+                    $configOptionsId,
+                    $containerId,
+                    $jsonSchemaUri,
+                ) => <<<JS
+import {ConfigOptions, ToolbarBuilder} from '@craftcms/ckeditor-config';
+
+  const configOptions = new ConfigOptions($configOptionsId, $jsonSchemaUri);
+  new ToolbarBuilder($toolbarBuilderId, $containerId, configOptions);
 JS,
                     [
                         $this->view->namespaceInputId('toolbar-builder'),
@@ -111,6 +111,8 @@ JS,
                         $containerId,
                         $jsonSchemaUri,
                     ],
+                    View::POS_END,
+                    ['type' => 'module']
                 );
             });
 

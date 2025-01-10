@@ -12,6 +12,7 @@ use craft\base\ElementInterface;
 use craft\base\Event;
 use craft\ckeditor\web\assets\BaseCkeditorPackageAsset;
 use craft\helpers\App;
+use craft\helpers\Json;
 use craft\web\assets\cp\CpAsset;
 use craft\web\View;
 
@@ -33,7 +34,7 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
     /**
      * @inheritdoc
      */
-    public $sourcePath = __DIR__ . '/dist';
+    public $sourcePath = __DIR__ . '/build';
 
     /**
      * @inheritdoc
@@ -46,14 +47,15 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
      * @inheritdoc
      */
     public $js = [
-        'ckeditor5-craftcms.js',
+        ['ckeditor5-craftcms.js', 'type' => 'module']
     ];
 
     /**
      * @inheritdoc
      */
     public $css = [
-        'css/ckeditor5-craftcms.css',
+        'lib/ckeditor5.css',
+        'ckeditor.css',
     ];
 
     public function registerAssetFiles($view): void
@@ -74,6 +76,13 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
                 'Site: {name}',
                 'This field doesn’t allow nested entries.',
             ]);
+
+            $assetManager = Craft::$app->getAssetManager();
+
+            $view->registerJsImport('ckeditor5', $this->baseUrl . '/lib/ckeditor5.js');
+            $view->registerJsImport('ckeditor5/', $this->baseUrl . '/lib/');
+            $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($this, 'ckeditor5-craftcms.js'));
+
             $view->registerJsWithVars(fn($attach) => <<<JS
 Craft.showCkeditorInspector = $attach;
 JS, [
@@ -93,12 +102,9 @@ JS, [
             }
         }
 
-        $view->registerJsWithVars(
-            fn($refHandles) => <<<JS
-window.CKEditor5.craftcms.localizedRefHandles = $refHandles;
-JS,
-            [$refHandles],
-            View::POS_END,
-        );
+        $view->registerScriptWithVars(fn($refHandles) => <<<JS
+import {setLocalizedRefHandles} from '@craftcms/ckeditor';
+setLocalizedRefHandles($refHandles);
+JS, [$refHandles], View::POS_END, ['type' => 'module']);
     }
 }
