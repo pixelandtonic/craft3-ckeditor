@@ -9,6 +9,7 @@ namespace craft\ckeditor\controllers;
 
 use Craft;
 use craft\ckeditor\CkeConfig;
+use craft\ckeditor\helpers\CkeditorConfig;
 use craft\ckeditor\helpers\CkeditorConfigSchema;
 use craft\ckeditor\Plugin;
 use craft\ckeditor\web\assets\ckeconfig\CkeConfigAsset;
@@ -88,6 +89,8 @@ class CkeConfigsController extends Controller
                 $jsonSchemaUri = sprintf('https://craft-code-editor.com/%s', $this->view->namespaceInputId('config-options-json'));
                 /** @var Response|CpScreenResponseBehavior $response */
                 $response->contentTemplate('ckeditor/cke-configs/_edit.twig', [
+                    'toolbarItems' => CkeditorConfig::toolbarItems(),
+                    'plugins' => CkeditorConfig::plugins(),
                     'ckeConfig' => $ckeConfig,
                     'jsonSchema' => CkeditorConfigSchema::create(),
                     'jsonSchemaUri' => $jsonSchemaUri,

@@ -4,16 +4,24 @@
  * @license GPL-3.0-or-later
  */
 
-/** global: Garnish, $ */
+/* global Garnish, $ */
 import './ckeconfig.css';
-import {create, toolbarItems} from '@craftcms/ckeditor';
+import * as CKEditor5 from 'ckeditor5';
+import {
+  create,
+  ImageTransform,
+  ImageEditor,
+  CraftLinkUI,
+  CraftImageInsertUI,
+  CraftEntries,
+} from '@craftcms/ckeditor';
 
 export default Garnish.Base.extend({
   $sourceContainer: null,
   $targetContainer: null,
   $input: null,
   value: null,
-  components: null,
+  components: {},
   drag: null,
   $items: null,
   draggingSourceItem: null,
@@ -23,215 +31,244 @@ export default Garnish.Base.extend({
   closestItem: null,
 
   init: function (id, containerId, configOptions, namespace) {
-    this.$sourceContainer = $(`#${id} .ckeditor-tb--source .ck-toolbar__items`);
-    this.$targetContainer = $(`#${id} .ckeditor-tb--target .ck-toolbar__items`);
-    this.$input = $(`#${id} input`);
+    this.$container = $(`#${id}`);
+    this.$sourceContainer = this.$container.find(
+      '.ckeditor-tb--source .ck-toolbar__items',
+    );
+    this.$targetContainer = this.$container.find(
+      '.ckeditor-tb--target .ck-toolbar__items',
+    );
+    this.$input = this.$container.find('input');
     this.value = JSON.parse(this.$input.val());
+
+    const availablePlugins = JSON.parse(this.$container.attr('data-plugins'));
 
     const editorContainer = document.createElement('DIV');
     const editorElement = document.createElement('DIV');
     editorContainer.appendChild(editorElement);
 
+    const allPlugins = Object.entries(CKEditor5)
+      .filter(([name]) => name && availablePlugins.includes(name))
+      .map(([_, fn]) => fn);
+
+    allPlugins.push(
+      ImageTransform,
+      ImageEditor,
+      CraftLinkUI,
+      CraftImageInsertUI,
+      CraftEntries,
+    );
+
     create(editorElement, {
       linkOptions: [{elementType: 'craft\\elements\\Asset'}],
       assetSources: ['*'],
       entryTypeOptions: [{label: 'fake', value: 'fake'}],
-    }).then((editor) => {
-      const cf = editor.ui.componentFactory;
-      const names = Array.from(cf.names());
-      this.components = {};
-      for (const name of names) {
-        this.components[name] = cf.create(name);
-      }
+      plugins: allPlugins,
+    })
+      .then((editor) => {
+        const cf = editor.ui.componentFactory;
 
-      const items = toolbarItems;
+        for (const name of cf.names()) {
+          this.components[name] = cf.create(name);
+        }
 
-      // Flatten any groups that are only partially selected
-      for (let i = 0; i < items.length; i++) {
-        const group = items[i];
-        if (group.length > 1) {
-          const index = this.value.findIndex((name) =>
-            group.some((item) => item.button === name),
-          );
-          if (index !== -1) {
-            for (let j = 0; j < group.length; j++) {
-              if (this.value[index + j] !== group[j].button) {
-                items.splice(i, 1, ...group.map((item) => [item]));
-                i += group.length - 1;
-                break;
+        const items = JSON.parse(this.$container.attr('data-available-items'));
+
+        // Flatten any groups that are only partially selected
+        for (let i = 0; i < items.length; i++) {
+          const group = items[i];
+          if (group.length > 1) {
+            const index = this.value.findIndex((name) =>
+              group.some((item) => item.button === name),
+            );
+            if (index !== -1) {
+              for (let j = 0; j < group.length; j++) {
+                if (this.value[index + j] !== group[j].button) {
+                  items.splice(i, 1, ...group.map((item) => [item]));
+                  i += group.length - 1;
+                  break;
+                }
               }
             }
           }
         }
-      }
 
-      this.drag = new Garnish.DragDrop({
-        dropTargets: this.$targetContainer,
-        helper: ($item) => {
-          const $outerContainer = $(
-            '<div class="offset-drag-helper ck ck-reset_all ck-editor ck-rounded-corners"/>',
-          );
-          const $innerContainer = $('<div class="ck ck-toolbar"/>').appendTo(
-            $outerContainer,
-          );
-          $item.appendTo($innerContainer);
-          return $outerContainer;
-        },
-        moveHelperToCursor: true,
-        onDragStart: () => {
-          Garnish.$bod.addClass('dragging');
-          const $draggee = this.drag.$draggee;
-          this.draggingSourceItem = $.contains(
-            this.$sourceContainer[0],
-            $draggee[0],
-          );
-          this.draggingSeparator = $draggee.hasClass('ckeditor-tb--separator');
-          this.$insertion = $('<div class="ckeditor-tb--insertion"/>').css({
-            width: $draggee.outerWidth(),
-          });
-          if (this.draggingSourceItem) {
-            if (this.draggingSeparator) {
-              // don't hide the draggee as we're just going to duplicate it
-              $draggee.css('visibility', '');
-            } else {
-              const property =
-                Craft.orientation === 'ltr' ? 'margin-right' : 'margin-left';
-              const margin = -1 * $draggee.outerWidth();
-              $draggee.stop().velocity({[property]: margin}, 200, () => {
-                $draggee.addClass('hidden');
-              });
-            }
-          } else {
-            $draggee.addClass('hidden');
-            this.$insertion.insertBefore($draggee);
-            this.showingInsertion = true;
-          }
-          this.setMidpoints();
-        },
-        onDrag: () => {
-          this.checkForNewClosestItem();
-        },
-        onDragStop: () => {
-          Garnish.$bod.removeClass('dragging');
-          let $draggee = this.drag.$draggee;
-          this.checkForNewClosestItem();
-          if (this.showingInsertion) {
+        this.drag = new Garnish.DragDrop({
+          dropTargets: this.$targetContainer,
+          helper: ($item) => {
+            const $outerContainer = $(
+              '<div class="offset-drag-helper ck ck-reset_all ck-editor ck-rounded-corners"/>',
+            );
+            const $innerContainer = $('<div class="ck ck-toolbar"/>').appendTo(
+              $outerContainer,
+            );
+            $item.appendTo($innerContainer);
+            return $outerContainer;
+          },
+          moveHelperToCursor: true,
+          onDragStart: () => {
+            Garnish.$bod.addClass('dragging');
+            const $draggee = this.drag.$draggee;
+            this.draggingSourceItem = $.contains(
+              this.$sourceContainer[0],
+              $draggee[0],
+            );
+            this.draggingSeparator = $draggee.hasClass(
+              'ckeditor-tb--separator',
+            );
+            this.$insertion = $('<div class="ckeditor-tb--insertion"/>').css({
+              width: $draggee.outerWidth(),
+            });
             if (this.draggingSourceItem) {
-              // clone the source item into the toolbar
-              let $item;
               if (this.draggingSeparator) {
-                $item = this.renderSeparator();
+                // don't hide the draggee as we're just going to duplicate it
+                $draggee.css('visibility', '');
               } else {
-                const componentNames = $draggee.data('componentNames');
-                $item = this.renderComponentGroup(componentNames);
-                // add any config settings
-                for (const name of componentNames) {
-                  const item = items.flat().find(({button}) => button === name);
-                  if (item && item.configOption) {
-                    configOptions.addSetting(item.configOption);
+                const property =
+                  Craft.orientation === 'ltr' ? 'margin-right' : 'margin-left';
+                const margin = -1 * $draggee.outerWidth();
+                $draggee.stop().velocity({[property]: margin}, 200, () => {
+                  $draggee.addClass('hidden');
+                });
+              }
+            } else {
+              $draggee.addClass('hidden');
+              this.$insertion.insertBefore($draggee);
+              this.showingInsertion = true;
+            }
+            this.setMidpoints();
+          },
+          onDrag: () => {
+            this.checkForNewClosestItem();
+          },
+          onDragStop: () => {
+            Garnish.$bod.removeClass('dragging');
+            let $draggee = this.drag.$draggee;
+            this.checkForNewClosestItem();
+            if (this.showingInsertion) {
+              if (this.draggingSourceItem) {
+                // clone the source item into the toolbar
+                let $item;
+                if (this.draggingSeparator) {
+                  $item = this.renderSeparator();
+                } else {
+                  const componentNames = $draggee.data('componentNames');
+                  $item = this.renderComponentGroup(componentNames);
+                  // add any config settings
+                  for (const name of componentNames) {
+                    const item = items
+                      .flat()
+                      .find(({button}) => button === name);
+                    if (item && item.configOption) {
+                      configOptions.addSetting(item.configOption);
+                    }
+                  }
+                }
+                $item.data('sourceItem', $draggee[0]);
+                $item.css('visibility', 'hidden');
+                this.$insertion.replaceWith($item);
+                this.drag.$draggee = $item;
+              } else {
+                this.$insertion.replaceWith($draggee);
+                $draggee.removeClass('hidden');
+              }
+            } else {
+              if (!this.draggingSourceItem) {
+                const $sourceItem = $($draggee.data('sourceItem'));
+                $draggee.remove();
+                this.drag.$draggee = $draggee = $sourceItem;
+                if (!this.draggingSeparator) {
+                  // remove any config settings
+                  for (const name of $sourceItem.data('componentNames')) {
+                    const item = items
+                      .flat()
+                      .find(({button}) => button === name);
+                    if (item && item.configOption) {
+                      configOptions.removeSetting(item.configOption);
+                    }
                   }
                 }
               }
-              $item.data('sourceItem', $draggee[0]);
-              $item.css('visibility', 'hidden');
-              this.$insertion.replaceWith($item);
-              this.drag.$draggee = $item;
-            } else {
-              this.$insertion.replaceWith($draggee);
-              $draggee.removeClass('hidden');
-            }
-          } else {
-            if (!this.draggingSourceItem) {
-              const $sourceItem = $($draggee.data('sourceItem'));
-              $draggee.remove();
-              this.drag.$draggee = $draggee = $sourceItem;
               if (!this.draggingSeparator) {
-                // remove any config settings
-                for (const name of $sourceItem.data('componentNames')) {
-                  const item = items.flat().find(({button}) => button === name);
-                  if (item && item.configOption) {
-                    configOptions.removeSetting(item.configOption);
-                  }
-                }
+                $draggee.removeClass('hidden');
+                const property =
+                  Craft.orientation === 'ltr' ? 'margin-right' : 'margin-left';
+                const currentMargin = $draggee.css(property);
+                $draggee.css(property, '');
+                const targetMargin = $draggee.css(property);
+                $draggee.css(property, currentMargin);
+                $draggee
+                  .stop()
+                  .velocity({[property]: targetMargin}, 200, () => {
+                    $draggee.css(property, '');
+                  });
               }
             }
-            if (!this.draggingSeparator) {
-              $draggee.removeClass('hidden');
-              const property =
-                Craft.orientation === 'ltr' ? 'margin-right' : 'margin-left';
-              const currentMargin = $draggee.css(property);
-              $draggee.css(property, '');
-              const targetMargin = $draggee.css(property);
-              $draggee.css(property, currentMargin);
-              $draggee.stop().velocity({[property]: targetMargin}, 200, () => {
-                $draggee.css(property, '');
-              });
+            this.drag.returnHelpersToDraggees();
+
+            // reset the items
+            this.$items = this.$targetContainer.children();
+            this.value = [];
+            for (const item of this.$items.toArray()) {
+              const $item = $(item);
+              if ($item.hasClass('ckeditor-tb--separator')) {
+                this.value.push('|');
+              } else {
+                this.value.push(...$item.data('componentNames'));
+              }
             }
-          }
-          this.drag.returnHelpersToDraggees();
+            this.$input.val(JSON.stringify(this.value));
+          },
+        });
 
-          // reset the items
-          this.$items = this.$targetContainer.children();
-          this.value = [];
-          for (const item of this.$items.toArray()) {
-            const $item = $(item);
-            if ($item.hasClass('ckeditor-tb--separator')) {
-              this.value.push('|');
-            } else {
-              this.value.push(...$item.data('componentNames'));
-            }
-          }
-          this.$input.val(JSON.stringify(this.value));
-        },
-      });
+        const sourceItems = {};
 
-      const sourceItems = {};
-
-      for (let group of items) {
-        const $item = this.renderComponentGroup(group);
-        if (!$item) {
-          continue;
-        }
-        $item.appendTo(this.$sourceContainer);
-        sourceItems[group.map((item) => item.button).join(',')] = $item[0];
-
-        if (this.value.includes(group[0].button)) {
-          $item.addClass('hidden');
-        }
-      }
-
-      sourceItems['|'] = this.renderSeparator().appendTo(
-        this.$sourceContainer,
-      )[0];
-
-      this.$items = $();
-
-      for (let i = 0; i < this.value.length; i++) {
-        const name = this.value[i];
-        let $item, key;
-        if (name === '|') {
-          $item = this.renderSeparator().appendTo(this.$targetContainer);
-          key = '|';
-        } else {
-          const group = items.find((group) =>
-            group.some((item) => item.button === name),
-          );
-          if (!group) {
-            // must no longer be a valid item
-            continue;
-          }
-          $item = this.renderComponentGroup(group);
+        for (let group of items) {
+          const $item = this.renderComponentGroup(group);
           if (!$item) {
             continue;
           }
-          $item.appendTo(this.$targetContainer);
-          key = group.map((item) => item.button).join(',');
-          i += group.length - 1;
+          $item.appendTo(this.$sourceContainer);
+          sourceItems[group.map((item) => item.button).join(',')] = $item[0];
+
+          if (this.value.includes(group[0].button)) {
+            $item.addClass('hidden');
+          }
         }
-        $item.data('sourceItem', sourceItems[key]);
-        this.$items = this.$items.add($item);
-      }
-    });
+
+        sourceItems['|'] = this.renderSeparator().appendTo(
+          this.$sourceContainer,
+        )[0];
+
+        this.$items = $();
+
+        for (let i = 0; i < this.value.length; i++) {
+          const name = this.value[i];
+          let $item, key;
+          if (name === '|') {
+            $item = this.renderSeparator().appendTo(this.$targetContainer);
+            key = '|';
+          } else {
+            const group = items.find((group) =>
+              group.some((item) => item.button === name),
+            );
+            if (!group) {
+              // must no longer be a valid item
+              continue;
+            }
+            $item = this.renderComponentGroup(group);
+            if (!$item) {
+              continue;
+            }
+            $item.appendTo(this.$targetContainer);
+            key = group.map((item) => item.button).join(',');
+            i += group.length - 1;
+          }
+          $item.data('sourceItem', sourceItems[key]);
+          this.$items = this.$items.add($item);
+        }
+      })
+      .catch(console.error);
   },
 
   renderSeparator: function () {

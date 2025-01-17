@@ -20,6 +20,7 @@ use craft\ckeditor\data\FieldData;
 use craft\ckeditor\data\Markup;
 use craft\ckeditor\events\DefineLinkOptionsEvent;
 use craft\ckeditor\events\ModifyConfigEvent;
+use craft\ckeditor\helpers\CkeditorConfig;
 use craft\ckeditor\web\assets\BaseCkeditorPackageAsset;
 use craft\ckeditor\web\assets\ckeditor\CkeditorAsset;
 use craft\db\FixedOrderExpression;
@@ -951,6 +952,24 @@ JS;
             $configOptionsJs = '{}';
         }
 
+        $removePlugins = Collection::empty();
+
+        // remove MediaEmbedToolbar for now
+        // see: https://github.com/ckeditor/ckeditor5-react/issues/267
+        // and: https://github.com/ckeditor/ckeditor5/issues/9824
+        // for more info
+        $removePlugins->push('MediaEmbedToolbar');
+
+        if (!$transforms || count($transforms) === 0) {
+            $removePlugins->push('ImageTransforms');
+        }
+
+        $plugins = collect(CkeditorConfig::pluginsByPackage())
+            ->mapWithKeys(fn(array $plugins, string $import) => [
+                $import => collect($plugins)
+                    ->reject(fn($plugin) => in_array($plugin, $removePlugins->toArray()))
+            ]);
+
         $baseConfigJs = Json::encode($event->baseConfig);
         $toolbarJs = Json::encode($event->toolbar);
         $languageJs = Json::encode([
@@ -961,18 +980,30 @@ JS;
         $showWordCountJs = Json::encode($this->showWordCount);
         $wordLimitJs = $this->wordLimit ?: 0;
 
+        $configPlugins = '[' . $plugins->flatten()->join(',') . ']';
+
+        $imports = $plugins
+            ->reduce(function(Collection $carry, Collection $plugins, string $import) {
+                $carry->push('import { ' . $plugins->join(', ') . ' } from "' . $import . '";');
+                return $carry;
+            }, Collection::empty())
+            ->join("\n");
+
         $view->registerScript(<<<JS
+$imports
 import {create} from '@craftcms/ckeditor';
+
 (($) => {
-  const config = Object.assign($baseConfigJs, $configOptionsJs);
-  if (!jQuery.isPlainObject(config.toolbar)) {
-    config.toolbar = {};
-  }
-  config.toolbar.items = $toolbarJs;
-  if (!jQuery.isPlainObject(config.language)) {
-    config.language = {};
-  }
-  config.language = Object.assign($languageJs, config.language);
+  const config = Object.assign({
+      language: $languageJs,
+  }, $baseConfigJs, $configOptionsJs, {
+    plugins: $configPlugins,
+    toolbar: {
+      items: $toolbarJs
+    },
+    removePlugins: []
+  });
+  
   const extraRemovePlugins = [];
   if ($showWordCountJs) {
     if (typeof config.wordCount === 'undefined') {
@@ -983,12 +1014,12 @@ import {create} from '@craftcms/ckeditor';
       const statText = [];
       if (config.wordCount.displayWords || typeof config.wordCount.displayWords === 'undefined') {
         statText.push(Craft.t('ckeditor', '{num, number} {num, plural, =1{word} other{words}}', {
-          num: stats.words,
+          num: stats.words
         }));
       }
       if (config.wordCount.displayCharacters) { // false by default
         statText.push(Craft.t('ckeditor', '{num, number} {num, plural, =1{character} other{characters}}', {
-          num: stats.characters,
+          num: stats.characters
         }));
       }
       const container = $('#' + $wordCountIdJs);
@@ -1003,18 +1034,15 @@ import {create} from '@craftcms/ckeditor';
         }
       }
       onUpdate(stats);
-    }
+    };
   } else {
     extraRemovePlugins.push('WordCount');
   }
   if (extraRemovePlugins.length) {
-    if (typeof config.removePlugins === 'undefined') {
-      config.removePlugins = [];
-    }
     config.removePlugins.push(...extraRemovePlugins);
   }
   create($idJs, config);
-})(jQuery)
+})(jQuery);
 JS,
             View::POS_END,
             ['type' => 'module']
