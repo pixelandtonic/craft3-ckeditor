@@ -150,6 +150,11 @@
 {% endembed %}
 
 {% script with {type: 'module'} %}
+import {ConfigOptions, ToolbarBuilder} from '@craftcms/ckeditor-config';
+
+const configOptions = new ConfigOptions("{{ configOptionsId }}", "{{ jsonSchemaUri }}");
+new ToolbarBuilder("{{  toolbarBuilderId }}", "{{ containerId }}", configOptions);
+
 (() => {
   // Register the config options JSON schema
   const jsonSchemaUri = {{ jsonSchemaUri|json_encode|raw }};

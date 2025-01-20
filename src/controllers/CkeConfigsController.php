@@ -89,7 +89,10 @@ class CkeConfigsController extends Controller
                 $jsonSchemaUri = sprintf('https://craft-code-editor.com/%s', $this->view->namespaceInputId('config-options-json'));
                 /** @var Response|CpScreenResponseBehavior $response */
                 $response->contentTemplate('ckeditor/cke-configs/_edit.twig', [
-                    'toolbarItems' => CkeditorConfig::toolbarItems(),
+                    'toolbarBuilderId' => $this->view->namespaceInputId('toolbar-builder'),
+                    'configOptionsId' => $this->view->namespaceInputId('config-options'),
+                    'containerId' => $containerId,
+                    'toolbarItems' => CkeditorConfig::normalizeToolbarItems(CkeditorConfig::$toolbarItems),
                     'plugins' => CkeditorConfig::plugins(),
                     'ckeConfig' => $ckeConfig,
                     'jsonSchema' => CkeditorConfigSchema::create(),
@@ -97,26 +100,6 @@ class CkeConfigsController extends Controller
                 ]);
 
                 $this->view->registerAssetBundle(CkeConfigAsset::class);
-                $this->view->registerScriptWithVars(fn(
-                    $toolbarBuilderId,
-                    $configOptionsId,
-                    $containerId,
-                    $jsonSchemaUri,
-                ) => <<<JS
-import {ConfigOptions, ToolbarBuilder} from '@craftcms/ckeditor-config';
-
-  const configOptions = new ConfigOptions($configOptionsId, $jsonSchemaUri);
-  new ToolbarBuilder($toolbarBuilderId, $containerId, configOptions);
-JS,
-                    [
-                        $this->view->namespaceInputId('toolbar-builder'),
-                        $this->view->namespaceInputId('config-options'),
-                        $containerId,
-                        $jsonSchemaUri,
-                    ],
-                    View::POS_END,
-                    ['type' => 'module']
-                );
             });
 
         if ($ckeConfig->uid) {
