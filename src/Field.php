@@ -862,6 +862,8 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
 
         $toolbar = array_values($toolbar);
 
+        $extraPlugins = [];
+
         $id = Html::id($this->handle);
         $idJs = Json::encode($view->namespaceInputId($id));
         $wordCountId = "$id-counts";
@@ -932,6 +934,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             'baseConfig' => $baseConfig,
             'ckeConfig' => $ckeConfig,
             'toolbar' => $toolbar,
+            'extraPlugins' => $extraPlugins
         ]);
         $this->trigger(self::EVENT_MODIFY_CONFIG, $event);
 
@@ -964,7 +967,10 @@ JS;
             $removePlugins->push('ImageTransforms');
         }
 
-        $plugins = collect(CkeditorConfig::pluginsByPackage())
+        $plugins = CkeditorConfig::pluginsByPackage();
+        $plugins['ckeditor5'] = array_merge($plugins['ckeditor5'], $event->extraPlugins);
+
+        $plugins = collect($plugins)
             ->mapWithKeys(fn(array $plugins, string $import) => [
                 $import => collect($plugins)
                     ->reject(fn($plugin) => in_array($plugin, $removePlugins->toArray()))

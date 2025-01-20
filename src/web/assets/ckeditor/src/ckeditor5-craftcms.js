@@ -6,267 +6,28 @@
 
 import 'ckeditor5/ckeditor5.css';
 import './ckeditor5-craftcms.css';
-import * as CKEditor5 from 'ckeditor5';
-const {
-  Alignment,
-  Autoformat,
-  AutoImage,
-  AutoLink,
-  BlockQuote,
-  Bold,
-  ClassicEditor,
-  Clipboard,
-  Code,
-  CodeBlock,
-  Essentials,
-  FindAndReplace,
-  Font,
-  GeneralHtmlSupport,
-  Heading,
-  HorizontalLine,
-  HtmlComment,
-  HtmlEmbed,
-  Image,
-  ImageCaption,
-  ImageStyle,
-  ImageToolbar,
-  Indent,
-  IndentBlock,
-  Italic,
-  LinkEditing,
-  LinkImage,
-  List,
-  ListProperties,
-  MediaEmbed,
-  MediaEmbedToolbar,
-  PageBreak,
-  Paragraph,
-  PasteFromOffice,
-  RemoveFormat,
-  SelectAll,
-  SourceEditing,
-  Strikethrough,
-  Style,
-  Subscript,
-  Superscript,
-  Table,
-  TableCaption,
-  TableCellProperties,
-  TableProperties,
-  TableToolbar,
-  TableUI,
-  TextPartLanguage,
-  TodoList,
-  Underline,
-  WordCount,
-} = CKEditor5;
 import {default as CraftImageInsertUI} from './image/imageinsert/imageinsertui';
 import {default as CraftLinkUI} from './link/linkui';
 import ImageTransform from './image/imagetransform';
 import ImageEditor from './image/imageeditor';
 import CraftEntries from './entries/entries';
 import CKEditorInspector from '@ckeditor/ckeditor5-inspector';
+import {ClassicEditor, Heading, SourceEditing} from 'ckeditor5';
 // import {Anchor} from '@northernco/ckeditor5-anchor-drupal';
 
-const allPlugins = [
-  Paragraph,
-  SelectAll,
-  Clipboard,
-  Alignment,
-  // Anchor,
-  AutoImage,
-  AutoLink,
-  Autoformat,
-  BlockQuote,
-  Bold,
-  Code,
-  CodeBlock,
-  List,
-  ListProperties,
-  Essentials,
-  FindAndReplace,
-  Font,
-  GeneralHtmlSupport,
-  Heading,
-  HorizontalLine,
-  HtmlComment,
-  HtmlEmbed,
-  Image,
-  ImageCaption,
-  ImageStyle,
-  ImageToolbar,
-  Indent,
-  IndentBlock,
-  Italic,
-  LinkEditing,
-  LinkImage,
-  MediaEmbed,
-  MediaEmbedToolbar,
-  PageBreak,
-  PasteFromOffice,
-  RemoveFormat,
-  SourceEditing,
-  Strikethrough,
-  Style,
-  Subscript,
-  Superscript,
-  Table,
-  TableCaption,
-  TableCellProperties,
-  TableProperties,
-  TableToolbar,
-  TableUI,
-  TextPartLanguage,
-  TodoList,
-  Underline,
-  WordCount,
-  CraftImageInsertUI,
+export {
   ImageTransform,
   ImageEditor,
   CraftLinkUI,
-  CraftEntries,
-];
+  CraftImageInsertUI,
+  CraftEntries
+}
 
 export let localizedRefHandles = [];
 
 export function setLocalizedRefHandles(handles) {
   localizedRefHandles = handles;
 }
-
-const normalizeToolbarItem = (group) => {
-  if (!$.isArray(group)) {
-    group = [group];
-  }
-  return group.map((item) => {
-    if (typeof item === 'string') {
-      item = {button: item};
-    }
-    return item;
-  });
-};
-
-const normalizeToolbarItems = (items) =>
-  items.map((group) => normalizeToolbarItem(group));
-
-export const toolbarItems = normalizeToolbarItems([
-  {button: 'heading', configOption: 'heading'},
-  {button: 'style', configOption: 'style'},
-  {button: 'alignment', configOption: 'alignment'},
-  'bold',
-  'italic',
-  'underline',
-  'strikethrough',
-  'subscript',
-  'superscript',
-  'code',
-  'link',
-  // 'anchor',
-  'textPartLanguage',
-  {button: 'fontSize', configOption: 'fontSize'},
-  'fontFamily',
-  'fontColor',
-  'fontBackgroundColor',
-  'insertImage',
-  'mediaEmbed',
-  'htmlEmbed',
-  'blockQuote',
-  'insertTable',
-  'codeBlock',
-  'bulletedList',
-  'numberedList',
-  'todoList',
-  ['outdent', 'indent'],
-  'horizontalLine',
-  'pageBreak',
-  'removeFormat',
-  'selectAll',
-  'findAndReplace',
-  ['undo', 'redo'],
-  'sourceEditing',
-  'createEntry',
-]);
-
-const pluginButtonMap = [
-  {plugins: ['Alignment'], buttons: ['alignment']},
-  // {plugins: ['Anchor'], buttons: ['anchor']},
-  {
-    plugins: [
-      'AutoImage',
-      // 'CraftImageInsertUI',
-      'Image',
-      'ImageCaption',
-      'ImageStyle',
-      'ImageToolbar',
-      'ImageTransform',
-      'ImageEditor',
-      'LinkImage',
-    ],
-    buttons: ['insertImage'],
-  },
-  {
-    plugins: ['AutoLink', 'CraftLinkUI', 'LinkEditing', 'LinkImage'],
-    buttons: ['link'],
-  },
-  {plugins: ['BlockQuote'], buttons: ['blockQuote']},
-  {plugins: ['Bold'], buttons: ['bold']},
-  {plugins: ['Code'], buttons: ['code']},
-  {plugins: ['CodeBlock'], buttons: ['codeBlock']},
-  {
-    plugins: ['List', 'ListProperties'],
-    buttons: ['bulletedList', 'numberedList'],
-  },
-  {
-    plugins: ['Font'],
-    buttons: ['fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor'],
-  },
-  {plugins: ['FindAndReplace'], buttons: ['findAndReplace']},
-  {plugins: ['Heading'], buttons: ['heading']},
-  {plugins: ['HorizontalLine'], buttons: ['horizontalLine']},
-  {plugins: ['HtmlEmbed'], buttons: ['htmlEmbed']},
-  {
-    plugins: ['Indent', 'IndentBlock'],
-    buttons: ['outdent', 'indent'],
-  },
-  {plugins: ['Italic'], buttons: ['italic']},
-  {
-    plugins: ['MediaEmbed', 'MediaEmbedToolbar'],
-    buttons: ['mediaEmbed'],
-  },
-  {plugins: ['PageBreak'], buttons: ['pageBreak']},
-  {plugins: ['RemoveFormat'], buttons: ['removeFormat']},
-  {plugins: ['SourceEditing'], buttons: ['sourceEditing']},
-  {plugins: ['Strikethrough'], buttons: ['strikethrough']},
-  {plugins: ['Style'], buttons: ['style']},
-  {plugins: ['Subscript'], buttons: ['subscript']},
-  {plugins: ['Superscript'], buttons: ['superscript']},
-  {
-    plugins: [
-      'Table',
-      'TableCaption',
-      'TableCellProperties',
-      'TableProperties',
-      'TableToolbar',
-      'TableUI',
-    ],
-    buttons: ['insertTable'],
-  },
-  {plugins: ['TextPartLanguage'], buttons: ['textPartLanguage']},
-  {plugins: ['TodoList'], buttons: ['todoList']},
-  {plugins: ['Underline'], buttons: ['underline']},
-  {plugins: ['CraftEntries'], buttons: ['createEntry']},
-];
-
-const findPlugin = (pluginName) => {
-  for (const [_, v] of Object.entries(CKEditor5)) {
-    if (typeof v === 'object') {
-      for (const [_, v2] of Object.entries(v)) {
-        if (typeof v2 === 'function' && v2.pluginName === pluginName) {
-          return v2;
-        }
-      }
-    }
-  }
-};
 
 export const registerPackage = (pkg) => {
   if (pkg.pluginNames) {
@@ -534,37 +295,6 @@ const handleClipboard = function (editor, plugins) {
 export const pluginNames = () => allPlugins.map((p) => p.pluginName);
 
 export const create = async function (element, config) {
-  let plugins = allPlugins;
-  const removePlugins = [];
-
-  if (config.toolbar) {
-    // Remove any plugins that aren't included in the toolbar
-    removePlugins.push(
-      ...pluginButtonMap
-        .filter(
-          ({buttons}) =>
-            !config.toolbar.items.some((button) => buttons.includes(button)),
-        )
-        .map(({plugins}) => plugins)
-        .flat(),
-    );
-  }
-
-  // remove ImageTransform if there aren't any image transforms
-  if (!config.transforms || !config.transforms.length) {
-    removePlugins.push('ImageTransform');
-  }
-
-  // remove MediaEmbedToolbar for now
-  // see: https://github.com/ckeditor/ckeditor5-react/issues/267
-  // and: https://github.com/ckeditor/ckeditor5/issues/9824
-  // for more info
-  removePlugins.push('MediaEmbedToolbar');
-
-  if (removePlugins.length) {
-    plugins = plugins.filter((p) => !removePlugins.includes(p.pluginName));
-  }
-
   if (typeof element === 'string') {
     element = document.querySelector(`#${element}`);
   }
@@ -573,7 +303,7 @@ export const create = async function (element, config) {
 
   const editor = await ClassicEditor.create(
     element,
-    Object.assign({plugins}, config),
+    config
   );
 
   if (Craft.showCkeditorInspector && Craft.userIsAdmin) {
@@ -617,16 +347,16 @@ export const create = async function (element, config) {
   });
 
   // Track changes in the source mode
-  if (plugins.includes(SourceEditing)) {
+  if (config.plugins.includes(SourceEditing)) {
     trackChangesInSourceMode(editor, SourceEditing);
   }
 
   // shortcuts for headings & paragraph
-  if (plugins.includes(Heading)) {
+  if (config.plugins.includes(Heading)) {
     headingShortcuts(editor, config);
   }
 
-  handleClipboard(editor, plugins);
+  handleClipboard(editor, config.plugins);
 
   return editor;
 };
