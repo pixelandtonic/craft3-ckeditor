@@ -4,65 +4,26 @@
  * @license GPL-3.0-or-later
  */
 
+export {default as CraftImageInsertUI} from './image/imageinsert/imageinsertui';
+export {default as CraftLinkUI} from './link/linkui';
+export {default as ImageTransform} from './image/imagetransform';
+export {default as ImageEditor} from './image/imageeditor';
+
 import 'ckeditor5/ckeditor5.css';
 import './ckeditor5-craftcms.css';
-import {default as CraftImageInsertUI} from './image/imageinsert/imageinsertui';
-import {default as CraftLinkUI} from './link/linkui';
-import ImageTransform from './image/imagetransform';
-import ImageEditor from './image/imageeditor';
 import CraftEntries from './entries/entries';
 import CKEditorInspector from '@ckeditor/ckeditor5-inspector';
 import {ClassicEditor, Heading, SourceEditing} from 'ckeditor5';
 // import {Anchor} from '@northernco/ckeditor5-anchor-drupal';
 
-export {
-  ImageTransform,
-  ImageEditor,
-  CraftLinkUI,
-  CraftImageInsertUI,
-  CraftEntries
-}
+export {CraftEntries}
+
 
 export let localizedRefHandles = [];
 
 export function setLocalizedRefHandles(handles) {
   localizedRefHandles = handles;
 }
-
-export const registerPackage = (pkg) => {
-  if (pkg.pluginNames) {
-    pkg.pluginNames.forEach((pluginName) => {
-      const plugin = findPlugin(pluginName);
-      if (!plugin) {
-        console.warn(
-          `No plugin named ${pluginName} found in window.CKEditor5.`,
-        );
-        return;
-      }
-      allPlugins.push(plugin);
-    });
-  }
-
-  if (pkg.toolbarItems) {
-    pkg.toolbarItems = normalizeToolbarItems(pkg.toolbarItems);
-    toolbarItems.push(...pkg.toolbarItems);
-  }
-
-  if (
-    pkg.pluginNames &&
-    pkg.pluginNames.length &&
-    pkg.toolbarItems &&
-    pkg.toolbarItems.length
-  ) {
-    pluginButtonMap.push({
-      plugins: pkg.pluginNames,
-      buttons: pkg.toolbarItems
-        .flat()
-        .map((item) => item.button)
-        .flat(),
-    });
-  }
-};
 
 const trackChangesInSourceMode = function (editor) {
   const sourceEditing = editor.plugins.get(SourceEditing);
@@ -291,8 +252,6 @@ const handleClipboard = function (editor, plugins) {
     }
   });
 };
-
-export const pluginNames = () => allPlugins.map((p) => p.pluginName);
 
 export const create = async function (element, config) {
   if (typeof element === 'string') {

@@ -86,20 +86,24 @@ class CkeConfigsController extends Controller
                 'retainScroll' => true,
             ])
             ->prepareScreen(function(Response $response, $containerId) use ($ckeConfig) {
+                $this->view->registerAssetBundle(CkeConfigAsset::class);
+
+                $ckePackageManager = Plugin::getInstance()->getCkePackageManager();
                 $jsonSchemaUri = sprintf('https://craft-code-editor.com/%s', $this->view->namespaceInputId('config-options-json'));
+
                 /** @var Response|CpScreenResponseBehavior $response */
                 $response->contentTemplate('ckeditor/cke-configs/_edit.twig', [
+                    'importStatements' => $ckePackageManager->getImportStatements(),
                     'toolbarBuilderId' => $this->view->namespaceInputId('toolbar-builder'),
                     'configOptionsId' => $this->view->namespaceInputId('config-options'),
                     'containerId' => $containerId,
-                    'toolbarItems' => CkeditorConfig::normalizeToolbarItems(CkeditorConfig::$toolbarItems),
-                    'plugins' => CkeditorConfig::plugins(),
+                    'toolbarItems' => CkeditorConfig::normalizeToolbarItems($ckePackageManager->getToolbarItems()),
+                    'plugins' => $ckePackageManager->getAllPlugins(),
                     'ckeConfig' => $ckeConfig,
                     'jsonSchema' => CkeditorConfigSchema::create(),
                     'jsonSchemaUri' => $jsonSchemaUri,
                 ]);
 
-                $this->view->registerAssetBundle(CkeConfigAsset::class);
             });
 
         if ($ckeConfig->uid) {

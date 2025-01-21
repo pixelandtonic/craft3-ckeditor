@@ -27,6 +27,7 @@ use yii\base\Event;
  * @method static Plugin getInstance()
  * @author Pixel & Tonic, Inc. <support@pixelandtonic.com>
  * @property-read CkeConfigs $ckeConfigs
+ * @property-read CkePackageManager $ckePackageManager
  */
 class Plugin extends \craft\base\Plugin
 {
@@ -35,6 +36,7 @@ class Plugin extends \craft\base\Plugin
         return [
             'components' => [
                 'ckeConfigs' => CkeConfigs::class,
+                'ckePackageManager' => CkePackageManager::class
             ],
         ];
     }
@@ -134,6 +136,10 @@ class Plugin extends \craft\base\Plugin
     public function getCkeConfigs(): CkeConfigs
     {
         return $this->get('ckeConfigs');
+    }
+    public function getCkePackageManager(): CkePackageManager
+    {
+        return $this->get('ckePackageManager');
     }
 
     public function getSettingsResponse(): mixed

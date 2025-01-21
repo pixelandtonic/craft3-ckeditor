@@ -8,6 +8,7 @@
 namespace craft\ckeditor\web\assets;
 
 use Craft;
+use craft\ckeditor\Plugin;
 use craft\web\AssetBundle;
 use craft\web\View;
 
@@ -67,9 +68,21 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
     public array $toolbarItems = [];
 
     /**
+     * @var string namespace to be used for the JavaScript import map.
+     *
+     * It's recommended to use a format of `@{author}/ckeditor5-{handle}`
+     */
+    public string $namespace;
+
+    /**
+     * @var string name of the JavaScript file containing the default exports of the CKEditor plugin
+     */
+    public string $module;
+
+    /**
      * @inheritdoc
      */
-    public function init()
+    public function init(): void
     {
         parent::init();
         $this->includeTranslation();
@@ -83,16 +96,15 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
      */
     public function registerPackage(View $view): void
     {
-        if (!empty($this->pluginNames) || !empty($this->toolbarItems)) {
-            $view->registerScriptWithVars(fn($package) => <<<JS
-import {registerPackage} from '@craftcms/ckeditor';
-registerPackage($package);
-JS, [
-                [
-                    'pluginNames' => $this->pluginNames,
-                    'toolbarItems' => $this->toolbarItems,
-                ],
-            ], View::POS_END, ['type' => 'module']);
+        if (!empty($this->pluginNames || !empty($this->toolbarItems))) {
+            $packageManager = Plugin::getInstance()->getCkePackageManager();
+            $packageManager->registerPackage($this->namespace, [
+                'plugins' => $this->pluginNames,
+                'toolbarItems' => $this->toolbarItems
+            ]);
+
+            $assetManager = $view->getAssetManager();
+            $view->registerJsImport($this->namespace, $assetManager->getAssetUrl($this, $this->module));
         }
     }
 

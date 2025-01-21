@@ -967,7 +967,7 @@ JS;
             $removePlugins->push('ImageTransforms');
         }
 
-        $plugins = CkeditorConfig::pluginsByPackage();
+        $plugins = Plugin::getInstance()->getCkePackageManager()->getPluginsByPackage();
         $plugins['ckeditor5'] = array_merge($plugins['ckeditor5'], $event->extraPlugins);
 
         $plugins = collect($plugins)

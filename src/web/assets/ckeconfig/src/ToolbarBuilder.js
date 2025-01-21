@@ -30,7 +30,7 @@ export default Garnish.Base.extend({
   showingInsertion: false,
   closestItem: null,
 
-  init: function (id, containerId, configOptions, namespace) {
+  init: function (id, containerId, configOptions, plugins = []) {
     this.$container = $(`#${id}`);
     this.$sourceContainer = this.$container.find(
       '.ckeditor-tb--source .ck-toolbar__items',
@@ -41,29 +41,15 @@ export default Garnish.Base.extend({
     this.$input = this.$container.find('input');
     this.value = JSON.parse(this.$input.val());
 
-    const availablePlugins = JSON.parse(this.$container.attr('data-plugins'));
-
     const editorContainer = document.createElement('DIV');
     const editorElement = document.createElement('DIV');
     editorContainer.appendChild(editorElement);
-
-    const allPlugins = Object.entries(CKEditor5)
-      .filter(([name]) => name && availablePlugins.includes(name))
-      .map(([_, fn]) => fn);
-
-    allPlugins.push(
-      ImageTransform,
-      ImageEditor,
-      CraftLinkUI,
-      CraftImageInsertUI,
-      CraftEntries,
-    );
 
     create(editorElement, {
       linkOptions: [{elementType: 'craft\\elements\\Asset'}],
       assetSources: ['*'],
       entryTypeOptions: [{label: 'fake', value: 'fake'}],
-      plugins: allPlugins,
+      plugins,
     })
       .then((editor) => {
         const cf = editor.ui.componentFactory;

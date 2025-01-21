@@ -8,6 +8,7 @@
 namespace craft\ckeditor\helpers;
 
 use craft\ckeditor\Field;
+use craft\ckeditor\Plugin;
 use craft\helpers\ArrayHelper;
 use Illuminate\Support\Collection;
 
@@ -433,7 +434,7 @@ final class CkeditorConfigSchema
             'PluginList' => [
                 'title' => 'List of plugin names',
                 'type' => 'array',
-                'items' => ['enum' => CkeditorConfig::plugins()],
+                'items' => ['enum' => Plugin::getInstance()->getCkePackageManager()->getAllPlugins()],
             ],
             'PropertyPatterns' => [
                 'description' => 'https://ckeditor.com/docs/ckeditor5/latest/api/module_engine_view_matcher-PropertyPatterns.html',

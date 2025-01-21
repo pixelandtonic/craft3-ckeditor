@@ -35,7 +35,7 @@
   data: {'error-key': 'toolbar'},
 } %}
   {% block input %}
-    <div id="toolbar-builder" class="ckeditor-tb pane" data-available-items="{{ toolbarItems|json_encode|e('html_attr') }}" data-plugins="{{ plugins|json_encode|e('html_attr') }}">
+    <div id="toolbar-builder" class="ckeditor-tb pane" data-available-items="{{ toolbarItems|json_encode|e('html_attr') }}">
       <div class="ck ck-reset_all">
         <div class="ckeditor-tb--items ckeditor-tb--source ck ck-reset ck-editor ck-rounded-corners">
           <div class="ck ck-toolbar">
@@ -151,9 +151,10 @@
 
 {% script with {type: 'module'} %}
 import {ConfigOptions, ToolbarBuilder} from '@craftcms/ckeditor-config';
+{{ importStatements|raw }}
 
 const configOptions = new ConfigOptions("{{ configOptionsId }}", "{{ jsonSchemaUri }}");
-new ToolbarBuilder("{{  toolbarBuilderId }}", "{{ containerId }}", configOptions);
+new ToolbarBuilder("{{  toolbarBuilderId }}", "{{ containerId }}", configOptions, [{{ plugins | join(',') }}]);
 
 (() => {
   // Register the config options JSON schema
