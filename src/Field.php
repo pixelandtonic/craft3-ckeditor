@@ -644,8 +644,17 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             ];
         }
 
+        $ckeConfig = null;
+        if ($this->ckeConfig) {
+            try {
+                $ckeConfig = Plugin::getInstance()->getCkeConfigs()->getByUid($this->ckeConfig);
+            } catch (InvalidArgumentException) {
+            }
+        }
+
         return $view->renderTemplate('ckeditor/_field-settings.twig', [
             'field' => $this,
+            'ckeConfig' => $ckeConfig,
             'userGroupOptions' => $userGroupOptions,
             'purifierConfigOptions' => $this->configOptions('htmlpurifier'),
             'volumeOptions' => $volumeOptions,

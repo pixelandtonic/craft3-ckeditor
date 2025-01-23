@@ -1,10 +1,19 @@
 {% import '_includes/forms.twig' as forms %}
 {% import 'codeeditor/codeEditor.twig' as codeEditor %}
 
+{% set readOnly = readOnly ?? false %}
+
 {% set baseMonacoOptions = {
   tabSize: 2,
   showUnused: false,
 } %}
+
+{% if readOnly %}
+  {% set baseMonacoOptions = baseMonacoOptions|merge({
+    domReadOnly: true,
+    readOnly: true
+  }) %}
+{% endif %}
 
 {% set baseCodeEditorOptions = {
   wrapperClass: 'monaco-editor-background-frame',
@@ -24,6 +33,7 @@
   required: true,
   errors: ckeConfig.getErrors('name'),
   data: {'error-key': 'name'},
+  disabled: readOnly,
 }) }}
 
 {% embed '_includes/forms/field.twig' with {
@@ -35,7 +45,7 @@
   data: {'error-key': 'toolbar'},
 } %}
   {% block input %}
-    <div id="toolbar-builder" class="ckeditor-tb pane">
+    <div id="toolbar-builder" class="ckeditor-tb pane{{ readOnly ? ' disabled' : '' }}">
       <div class="ck ck-reset_all">
         <div class="ckeditor-tb--items ckeditor-tb--source ck ck-reset ck-editor ck-rounded-corners">
           <div class="ck ck-toolbar">
@@ -74,6 +84,7 @@
     {label: 'Heading {level}'|t('ckeditor', {level: 6}), value: '6'},
   ],
   values: ckeConfig.headingLevels,
+  disabled: readOnly,
 }) }}
 
 {% embed '_includes/forms/field.twig' with {
@@ -111,9 +122,17 @@
       </section>
     </div>
 
+    {% set classes = [] %}
+    {% if not isJson %}
+      {% set classes = classes|merge(['hidden']) %}
+    {% endif %}
+    {% if readOnly %}
+      {% set classes = classes|merge(['disabled']) %}
+    {% endif %}
+
     {% tag 'div' with {
       id: 'config-options-json-container',
-      class: not isJson ? 'hidden' : null
+      class: classes|join(' '),
     } %}
       {{ codeEditor.textarea(
         {
@@ -129,9 +148,17 @@
       ) }}
     {% endtag %}
 
+
+    {% set classes = [] %}
+    {% if not isJs %}
+      {% set classes = classes|merge(['hidden']) %}
+    {% endif %}
+    {% if readOnly %}
+      {% set classes = classes|merge(['disabled']) %}
+    {% endif %}
     {% tag 'div' with {
       id: 'config-options-js-container',
-      class: not isJs ? 'hidden' : null
+      class: classes|join(' ')
     } %}
       {{ codeEditor.textarea(
         {
@@ -188,5 +215,7 @@
   baseMonacoOptions|merge({
     language: 'css',
   }),
-  baseCodeEditorOptions,
+  baseCodeEditorOptions|merge({
+    wrapperClass: readOnly ? 'disabled' : null,
+  }),
 ) }}

@@ -5,7 +5,7 @@
   id: 'cke-config',
   name: 'ckeConfig',
   options: plugin('ckeditor').ckeConfigs.getAll(),
-  value: field.ckeConfig ? plugin('ckeditor').ckeConfigs.getByUid(field.ckeConfig) : null,
+  value: ckeConfig ?? null,
   limit: 1,
   createAction: 'ckeditor/cke-configs/edit',
 }) }}
