@@ -110,7 +110,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
      * @var NestedElementManager[]
      */
     private static array $entryManagers = [];
-    
+
     /**
      * @inheritdoc
      */
@@ -409,10 +409,10 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
     public ?string $defaultTransform = null;
 
     /**
-     * @var bool Whether to enable source editing for non-admin users.
-     * @since 3.3.0
+     * @var string|string[]|null User groups whose members should be able to see the “Source” button
+     * @since 4.5.0
      */
-    public bool $enableSourceEditingForNonAdmins = false;
+    public string|array|null $sourceEditingGroups = ['__ADMINS__'];
 
     /**
      * @var bool Whether to show volumes the user doesn’t have permission to view.
@@ -451,6 +451,13 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             $config['removeEmptyTags'],
             $config['removeNbsp'],
         );
+
+        if (isset($config['enableSourceEditingForNonAdmins'])) {
+            $config['sourceEditingGroups'] = $config['enableSourceEditingForNonAdmins'] ? '*' : ['__ADMINS__'];
+            unset($config['enableSourceEditingForNonAdmins']);
+        } elseif (array_key_exists('sourceEditingGroups', $config) && empty($config['sourceEditingGroups'])) {
+            $config['sourceEditingGroups'] = null;
+        }
 
         if (isset($config['entryTypes']) && $config['entryTypes'] === '') {
             $config['entryTypes'] = [];
@@ -603,6 +610,22 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
     {
         $view = Craft::$app->getView();
 
+        $userGroupOptions = [
+            [
+                'label' => Craft::t('app', 'Admins'),
+                'value' => '__ADMINS__',
+            ],
+        ];
+
+        foreach (Craft::$app->getUserGroups()->getAllGroups() as $group) {
+            if ($group->can('accessCp')) {
+                $userGroupOptions[] = [
+                    'label' => $group->name,
+                    'value' => $group->uid,
+                ];
+            }
+        }
+
         $volumeOptions = [];
         foreach (Craft::$app->getVolumes()->getAllVolumes() as $volume) {
             if ($volume->getFs()->hasUrls) {
@@ -623,6 +646,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
 
         return $view->renderTemplate('ckeditor/_field-settings.twig', [
             'field' => $this,
+            'userGroupOptions' => $userGroupOptions,
             'purifierConfigOptions' => $this->configOptions('htmlpurifier'),
             'volumeOptions' => $volumeOptions,
             'transformOptions' => $transformOptions,
@@ -855,7 +879,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             ArrayHelper::removeValue($toolbar, 'createEntry');
         }
 
-        if (!$this->enableSourceEditingForNonAdmins && !Craft::$app->getUser()->getIsAdmin()) {
+        if (!$this->isSourceEditingAllowed(Craft::$app->getUser()->getIdentity())) {
             ArrayHelper::removeValue($toolbar, 'sourceEditing');
         }
 
@@ -920,7 +944,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             'ui' => [
                 'viewportOffset' => ['top' => 44],
                 'poweredBy' => [
-                    'position' => 'inside',
+                    'position' => 'outside',
                     'label' => '',
                 ],
             ],
@@ -1101,7 +1125,7 @@ JS,
             }
 
             $value = $chunks
-                ->map(function(BaseChunk $chunk) use ($static, $entries) {
+                ->map(function(BaseChunk $chunk) use ($static, $entries, $element) {
                     if ($chunk instanceof Markup) {
                         return $chunk->rawHtml;
                     }
@@ -1110,6 +1134,13 @@ JS,
                     $entry = $entries[$chunk->entryId];
 
                     try {
+                        // set up-to-date owner on the entry
+                        // e.g. when provisional draft was created for the owner and the page was reloaded
+                        $entry->setOwner($element);
+                        if ($entry->id === $entry->getPrimaryOwnerId()) {
+                            $entry->setPrimaryOwner($element);
+                        }
+
                         $cardHtml = $this->getCardHtml($entry);
                     } catch (InvalidConfigException) {
                         // this can happen e.g. when the entry type has been deleted
@@ -1155,7 +1186,33 @@ JS,
     }
 
     /**
-     * @innheritdoc
+     * Returns if user belongs to a group whose members are allowed to edit source even if they're not admins
+     * @param User $user
+     * @return bool
+     */
+    private function isSourceEditingAllowed(User $user): bool
+    {
+        if ($this->sourceEditingGroups === '*') {
+            return true;
+        }
+
+        $sourceEditingGroups = array_flip($this->sourceEditingGroups);
+
+        if ($user->admin && isset($sourceEditingGroups['__ADMINS__'])) {
+            return true;
+        }
+
+        foreach ($user->getGroups() as $group) {
+            if (isset($sourceEditingGroups[$group->uid])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @inheritdoc
      */
     protected function searchKeywords(mixed $value, ElementInterface $element): string
     {
@@ -1665,5 +1722,21 @@ JS,
         }
 
         return '';
+    }
+
+    /**
+     * @deprecated in 4.5.0
+     */
+    public function getEnableSourceEditingForNonAdmins(): bool
+    {
+        return $this->sourceEditingGroups === '*';
+    }
+
+    /**
+     * @deprecated in 4.5.0
+     */
+    public function setEnableSourceEditingForNonAdmins(bool $value): void
+    {
+        $this->sourceEditingGroups = $value ? '*' : ['__ADMINS__'];
     }
 }

@@ -4,6 +4,15 @@
 
 ## Unreleased (4.x)
 
+- CKEditor fields no longer have extra bottom padding, and the CKEditor logo is now displayed over the bottom border. ([#252](https://github.com/craftcms/ckeditor/pull/252))
+- Added the ability to show the “Source” button for specific user groups. ([#318](https://github.com/craftcms/ckeditor/pull/318))
+- Added `craft\ckeditor\Field::$sourceEditingGroups`.
+- Deprecated `craft\ckeditor\Field::$enableSourceEditingForNonAdmins`.
+- Updated to CKEditor 5 44.0.0.
+- Fixed a bug where “Edit entry” buttons were only partially translated. ([#337](https://github.com/craftcms/ckeditor/issues/337))
+- Fixed a bug where copying and pasting nested entries wasn’t working on non-primary sites. ([#315](https://github.com/craftcms/ckeditor/issues/315))
+- Fixed an error that could occur when editing nested entries on newly-created provisional drafts. ([#339](https://github.com/craftcms/ckeditor/pull/339))
+
 ## 4.4.0 - 2024-11-12
 
 - When saving a nested entry within a CKEditor field, the changes are now saved to a draft of the owner element, rather than published immediately. ([craftcms/cms#16002](https://github.com/craftcms/cms/pull/16002), [#308](https://github.com/craftcms/ckeditor/pull/308))

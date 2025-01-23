@@ -189,7 +189,7 @@ export default class CraftEntriesUI extends Plugin {
     button.set({
       isEnabled: true,
       label: Craft.t('app', 'Edit {type}', {
-        type: Craft.t('app', 'entry'),
+        type: Craft.elementTypeNames['craft\\elements\\Entry'][2],
       }),
       tooltip: true,
       withText: true,
@@ -238,13 +238,15 @@ export default class CraftEntriesUI extends Plugin {
     const editor = this.editor;
     const elementEditor = this.getElementEditor();
 
+    let $element = this._getCardElement(entryId);
+    const ownerId = $element.data('owner-id');
+
     const slideout = Craft.createElementEditor(this.elementType, null, {
       elementId: entryId,
       params: {
         siteId: siteId,
       },
       onBeforeSubmit: async () => {
-        let $element = this._getCardElement(entryId);
         // If the nested element is primarily owned by the canonical entry being edited,
         // then ensure we're working with a draft and save the nested entry changes to the draft
         if (
@@ -268,7 +270,7 @@ export default class CraftEntriesUI extends Plugin {
             slideout.elementEditor.settings.saveParams.action =
               'elements/save-nested-element-for-derivative';
             slideout.elementEditor.settings.saveParams.newOwnerId =
-              elementEditor.getDraftElementId($element.data('owner-id'));
+              elementEditor.getDraftElementId(ownerId);
           }
         }
       },

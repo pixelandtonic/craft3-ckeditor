@@ -293,6 +293,8 @@ This example treats both chunk types as strings. For entry chunks, this is equiv
 
 You can use the `ckeditor/convert/redactor` command to convert any existing Redactor fields over to CKEditor. For each unique Redactor config, a new CKEditor config will be created and associated with the appropriate field(s).
 
+The command will make changes to your project config. You should commit them, and run `craft up` on other environments for the changes to take effect.
+
 ```sh
 php craft ckeditor/convert/redactor
 ```
