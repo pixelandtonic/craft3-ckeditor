@@ -967,7 +967,7 @@ JS;
             $removePlugins->push('ImageTransforms');
         }
 
-        $plugins = Plugin::getInstance()->getCkePackageManager()->getPluginsByPackage();
+        $plugins = CkeditorConfig::getPluginsByPackage();
         $plugins['ckeditor5'] = array_merge($plugins['ckeditor5'], $event->extraPlugins);
 
         $plugins = collect($plugins)
@@ -975,16 +975,6 @@ JS;
                 $import => collect($plugins)
                     ->reject(fn($plugin) => in_array($plugin, $removePlugins->toArray()))
             ]);
-
-        $baseConfigJs = Json::encode($event->baseConfig);
-        $toolbarJs = Json::encode($event->toolbar);
-        $languageJs = Json::encode([
-            'ui' => BaseCkeditorPackageAsset::uiLanguage(),
-            'content' => $element?->getSite()->language ?? Craft::$app->language,
-            'textPartLanguage' => static::textPartLanguage(),
-        ]);
-        $showWordCountJs = Json::encode($this->showWordCount);
-        $wordLimitJs = $this->wordLimit ?: 0;
 
         $configPlugins = '[' . $plugins->flatten()->join(',') . ']';
 
@@ -995,7 +985,7 @@ JS;
             }, Collection::empty())
             ->join("\n");
 
-        $view->registerScript(<<<JS
+        $view->registerScriptWithVars(fn($baseConfigJs, $toolbarJs, $languageJs, $showWordCountJs, $wordLimitJs) => <<<JS
 $imports
 import {create} from '@craftcms/ckeditor';
 
@@ -1050,6 +1040,17 @@ import {create} from '@craftcms/ckeditor';
   create($idJs, config);
 })(jQuery);
 JS,
+            [
+                $event->baseConfig,
+                $event->toolbar,
+                [
+                    'ui' => BaseCkeditorPackageAsset::uiLanguage(),
+                    'content' => $element?->getSite()->language ?? Craft::$app->language,
+                    'textPartLanguage' => static::textPartLanguage(),
+                ],
+                $this->showWordCount,
+                $this->wordLimit ?: 0
+            ],
             View::POS_END,
             ['type' => 'module']
         );
@@ -1251,10 +1252,8 @@ JS,
     /**
      * Fill entry card CKE markup (<craft-entry data-entry-id="96"></craft-entry>)
      * with actual card HTML of the entry it's linking to
-
      * Replace the entry card CKE markup (<craft-entry data-entry-id="96"></craft-entry>)
      * with actual card HTML of the entry it's linking to
-
      * Replace the entry card CKE markup (<craft-entry data-entry-id="96"></craft-entry>)
      * with the rendered HTML of the entry it's linking to
      */
@@ -1678,8 +1677,8 @@ JS,
     private function _accessibleFieldName(?ElementInterface $element = null): string
     {
         return Craft::t('site', $this->name) .
-        ($element?->getFieldLayout()?->getField($this->handle)?->required ? ' ' . Craft::t('site', 'Required') : '') .
-        ($this->getIsTranslatable($element) ? ' ' . $this->getTranslationDescription($element) : '');
+            ($element?->getFieldLayout()?->getField($this->handle)?->required ? ' ' . Craft::t('site', 'Required') : '') .
+            ($this->getIsTranslatable($element) ? ' ' . $this->getTranslationDescription($element) : '');
     }
 
     /**

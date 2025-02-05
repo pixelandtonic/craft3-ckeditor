@@ -8,7 +8,7 @@
 namespace craft\ckeditor\web\assets;
 
 use Craft;
-use craft\ckeditor\Plugin;
+use craft\ckeditor\helpers\CkeditorConfig;
 use craft\web\AssetBundle;
 use craft\web\View;
 
@@ -97,8 +97,7 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
     public function registerPackage(View $view): void
     {
         if (!empty($this->pluginNames || !empty($this->toolbarItems))) {
-            $packageManager = Plugin::getInstance()->getCkePackageManager();
-            $packageManager->registerPackage($this->namespace, [
+            CkeditorConfig::registerPackage($this->namespace, [
                 'plugins' => $this->pluginNames,
                 'toolbarItems' => $this->toolbarItems
             ]);
