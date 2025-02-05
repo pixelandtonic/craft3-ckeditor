@@ -1,4 +1,5 @@
-import { create, toolbarItems } from "@craftcms/ckeditor";
+import "ckeditor5";
+import { create } from "@craftcms/ckeditor";
 /**
  * @link https://craftcms.com/
  * @copyright Copyright (c) Pixel & Tonic, Inc.
@@ -9,7 +10,7 @@ const ToolbarBuilder = Garnish.Base.extend({
   $targetContainer: null,
   $input: null,
   value: null,
-  components: null,
+  components: {},
   drag: null,
   $items: null,
   draggingSourceItem: null,
@@ -17,19 +18,23 @@ const ToolbarBuilder = Garnish.Base.extend({
   $insertion: null,
   showingInsertion: !1,
   closestItem: null,
-  init: function(t, e, s, r) {
-    this.$sourceContainer = $(`#${t} .ckeditor-tb--source .ck-toolbar__items`), this.$targetContainer = $(`#${t} .ckeditor-tb--target .ck-toolbar__items`), this.$input = $(`#${t} input`), this.value = JSON.parse(this.$input.val());
+  init: function(t, e, s, r = []) {
+    this.$container = $(`#${t}`), this.$sourceContainer = this.$container.find(
+      ".ckeditor-tb--source .ck-toolbar__items"
+    ), this.$targetContainer = this.$container.find(
+      ".ckeditor-tb--target .ck-toolbar__items"
+    ), this.$input = this.$container.find("input"), this.value = JSON.parse(this.$input.val());
     const a = document.createElement("DIV"), c = document.createElement("DIV");
     a.appendChild(c), create(c, {
       linkOptions: [{ elementType: "craft\\elements\\Asset" }],
       assetSources: ["*"],
-      entryTypeOptions: [{ label: "fake", value: "fake" }]
-    }).then((h) => {
-      const g = h.ui.componentFactory, j = Array.from(g.names());
-      this.components = {};
-      for (const n of j)
+      entryTypeOptions: [{ label: "fake", value: "fake" }],
+      plugins: r
+    }).then((u) => {
+      const g = u.ui.componentFactory;
+      for (const n of g.names())
         this.components[n] = g.create(n);
-      const f = toolbarItems;
+      const f = JSON.parse(this.$container.attr("data-available-items"));
       for (let n = 0; n < f.length; n++) {
         const i = f[n];
         if (i.length > 1) {
@@ -62,7 +67,9 @@ const ToolbarBuilder = Garnish.Base.extend({
           if (this.draggingSourceItem = $.contains(
             this.$sourceContainer[0],
             n[0]
-          ), this.draggingSeparator = n.hasClass("ckeditor-tb--separator"), this.$insertion = $('<div class="ckeditor-tb--insertion"/>').css({
+          ), this.draggingSeparator = n.hasClass(
+            "ckeditor-tb--separator"
+          ), this.$insertion = $('<div class="ckeditor-tb--insertion"/>').css({
             width: n.outerWidth()
           }), this.draggingSourceItem)
             if (this.draggingSeparator)
@@ -92,7 +99,7 @@ const ToolbarBuilder = Garnish.Base.extend({
                 const o = n.data("componentNames");
                 i = this.renderComponentGroup(o);
                 for (const l of o) {
-                  const d = f.flat().find(({ button: u }) => u === l);
+                  const d = f.flat().find(({ button: h }) => h === l);
                   d && d.configOption && s.addSetting(d.configOption);
                 }
               }
@@ -141,15 +148,15 @@ const ToolbarBuilder = Garnish.Base.extend({
           o = this.renderSeparator().appendTo(this.$targetContainer), l = "|";
         else {
           const d = f.find(
-            (u) => u.some((C) => C.button === i)
+            (h) => h.some((j) => j.button === i)
           );
           if (!d || (o = this.renderComponentGroup(d), !o))
             continue;
-          o.appendTo(this.$targetContainer), l = d.map((u) => u.button).join(","), n += d.length - 1;
+          o.appendTo(this.$targetContainer), l = d.map((h) => h.button).join(","), n += d.length - 1;
         }
         o.data("sourceItem", p[l]), this.$items = this.$items.add(o);
       }
-    });
+    }).catch(console.error);
   },
   renderSeparator: function() {
     const t = $(
@@ -171,9 +178,9 @@ const ToolbarBuilder = Garnish.Base.extend({
         continue;
       }
       e.push(c);
-      const h = (c.is("[data-cke-tooltip-text]") ? c : c.find("[data-cke-tooltip-text]")).attr("data-cke-tooltip-text");
+      const u = (c.is("[data-cke-tooltip-text]") ? c : c.find("[data-cke-tooltip-text]")).attr("data-cke-tooltip-text");
       s.push(
-        h ? h.replace(/ \(.*\)$/, "") : `${a[0].toUpperCase()}${a.slice(1)}`
+        u ? u.replace(/ \(.*\)$/, "") : `${a[0].toUpperCase()}${a.slice(1)}`
       );
     }
     if (!e.length)

@@ -16,8 +16,7 @@ import CKEditorInspector from '@ckeditor/ckeditor5-inspector';
 import {ClassicEditor, Heading, SourceEditing} from 'ckeditor5';
 // import {Anchor} from '@northernco/ckeditor5-anchor-drupal';
 
-export {CraftEntries}
-
+export {CraftEntries};
 
 export let localizedRefHandles = [];
 
@@ -260,10 +259,7 @@ export const create = async function (element, config) {
 
   config.licenseKey = 'GPL';
 
-  const editor = await ClassicEditor.create(
-    element,
-    config
-  );
+  const editor = await ClassicEditor.create(element, config);
 
   if (Craft.showCkeditorInspector && Craft.userIsAdmin) {
     CKEditorInspector.attach(editor);
