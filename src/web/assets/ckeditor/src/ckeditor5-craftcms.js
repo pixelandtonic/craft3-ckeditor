@@ -9,6 +9,7 @@ import {Alignment} from '@ckeditor/ckeditor5-alignment';
 import {
   AutoImage,
   Image,
+  ImageResize,
   ImageCaption,
   ImageStyle,
   ImageToolbar,
@@ -87,6 +88,7 @@ const allPlugins = [
   HtmlComment,
   HtmlEmbed,
   Image,
+  ImageResize,
   ImageCaption,
   ImageStyle,
   ImageToolbar,
@@ -564,6 +566,12 @@ export const create = async function (element, config) {
   // and: https://github.com/ckeditor/ckeditor5/issues/9824
   // for more info
   removePlugins.push('MediaEmbedToolbar');
+
+  // remove ImageResize build-in plugin, if it's not explicitly allowed in config
+  // see: https://github.com/craftcms/ckeditor/issues/328
+  if (!config.enableImageResize) {
+    removePlugins.push('ImageResize');
+  }
 
   if (removePlugins.length) {
     plugins = plugins.filter((p) => !removePlugins.includes(p.pluginName));
