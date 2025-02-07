@@ -75,11 +75,6 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
     public string $namespace;
 
     /**
-     * @var string name of the JavaScript file containing the default exports of the CKEditor plugin
-     */
-    public string $module;
-
-    /**
      * @inheritdoc
      */
     public function init(): void
