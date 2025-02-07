@@ -12,7 +12,6 @@ use craft\base\ElementInterface;
 use craft\base\Event;
 use craft\ckeditor\web\assets\BaseCkeditorPackageAsset;
 use craft\helpers\App;
-use craft\helpers\Json;
 use craft\web\assets\cp\CpAsset;
 use craft\web\View;
 
@@ -76,13 +75,6 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
                 'Site: {name}',
                 'This field doesn’t allow nested entries.',
             ]);
-
-            $assetManager = Craft::$app->getAssetManager();
-
-            $view->registerJsImport('ckeditor5', $this->baseUrl . '/lib/ckeditor5.js');
-            $view->registerJsImport('ckeditor5/', $this->baseUrl . '/lib/');
-            $view->registerJsImport('ckeditor5/translations/', $this->baseUrl . '/lib/translations/');
-            $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($this, 'ckeditor5-craftcms.js'));
 
             $view->registerJsWithVars(fn($attach) => <<<JS
 Craft.showCkeditorInspector = $attach;

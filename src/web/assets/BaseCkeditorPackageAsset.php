@@ -101,9 +101,6 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
                 'plugins' => $this->pluginNames,
                 'toolbarItems' => $this->toolbarItems
             ]);
-
-            $assetManager = $view->getAssetManager();
-            $view->registerJsImport($this->namespace, $assetManager->getAssetUrl($this, $this->module));
         }
     }
 

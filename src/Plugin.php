@@ -15,6 +15,7 @@ use craft\elements\NestedElementManager;
 use craft\events\AssetBundleEvent;
 use craft\events\ModelEvent;
 use craft\events\RegisterComponentTypesEvent;
+use craft\events\RegisterJsImportEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\services\Fields;
 use craft\web\UrlManager;
@@ -87,6 +88,21 @@ class Plugin extends \craft\base\Plugin
                     }
                 }
             }
+        });
+
+        Event::on(
+            View::class,
+            View::EVENT_REGISTER_JS_IMPORT_MAP,
+            function(RegisterJsImportEvent $event) {
+                /** @var View $view */
+                $view = $event->sender;
+
+                $bundle = $view->assetManager->getBundle(CkeditorAsset::class);
+
+                $event->imports['ckeditor5'] = $bundle->baseUrl . '/lib/ckeditor5.js';
+                $event->imports['ckeditor5/']  = $bundle->baseUrl .'/lib/';
+                $event->imports['ckeditor5/translations/'] = $bundle->baseUrl . '/lib/translations/';
+                $event->imports['@craftcms/ckeditor'] = $view->getAssetManager()->getAssetUrl($bundle, 'ckeditor5-craftcms.js');
         });
 
         Event::on(Element::class, Element::EVENT_AFTER_PROPAGATE, function(ModelEvent $event) {
