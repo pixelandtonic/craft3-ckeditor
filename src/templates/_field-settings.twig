@@ -5,7 +5,7 @@
   id: 'cke-config',
   name: 'ckeConfig',
   options: plugin('ckeditor').ckeConfigs.getAll(),
-  value: field.ckeConfig ? plugin('ckeditor').ckeConfigs.getByUid(field.ckeConfig) : null,
+  value: ckeConfig ?? null,
   limit: 1,
   createAction: 'ckeditor/cke-configs/edit',
 }) }}
@@ -29,12 +29,19 @@
   on: field.showWordCount
 }) }}
 
-{{ forms.lightswitchField({
-  id: 'enable-source-editing-for-non-admins',
-  name: 'enableSourceEditingForNonAdmins',
-  label: 'Show the “Source” button for non-admin users?'|t('ckeditor'),
-  on: field.enableSourceEditingForNonAdmins,
-}) }}
+{% if userGroupOptions|length %}
+<div id="source-editing-groups">
+  {{ forms.checkboxSelectField({
+    id: 'sourceEditingGroups',
+    name: 'sourceEditingGroups',
+    label: 'Who should see the “Source” button?'|t('ckeditor'),
+    options: userGroupOptions,
+    values: field.sourceEditingGroups,
+    allLabel: 'All users'|t('app'),
+    showAllOption: true,
+  }) }}
+</div>
+{% endif %}
 
 <hr>
 

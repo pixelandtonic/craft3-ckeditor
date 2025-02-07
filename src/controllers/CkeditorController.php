@@ -106,17 +106,17 @@ class CkeditorController extends Controller
      */
     public function actionDuplicateNestedEntry(): Response
     {
-        $entryId = $this->request->getRequiredBodyParam('entryId');
-        $siteId = $this->request->getBodyParam('siteId');
+        $entryId = $this->request->getRequiredBodyParam('entryId'); // id of the entry we're going to duplicate
+        $sourceSiteId = $this->request->getBodyParam('sourceSiteId');
+        $targetSiteId = $this->request->getBodyParam('targetSiteId');
         $targetEntryTypeIds = $this->request->getBodyParam('targetEntryTypeIds');
         $targetOwnerId = $this->request->getBodyParam('targetOwnerId');
         $targetLayoutElementUid = $this->request->getBodyParam('targetLayoutElementUid');
         $targetFieldId = null;
 
-        $entry = Craft::$app->getEntries()->getEntryById($entryId, null, [
+        $entry = Craft::$app->getEntries()->getEntryById($entryId, $sourceSiteId, [
             'status' => null,
             'revisions' => null,
-            'preferSites' => [$siteId],
         ]);
 
         if (!$entry) {
@@ -137,7 +137,7 @@ class CkeditorController extends Controller
         // get ID of the field we're duplicating (e.g. pasting) into
         if ($targetLayoutElementUid !== null) {
             if ($targetOwnerId !== null && $entry->primaryOwnerId !== $targetOwnerId) {
-                $owner = Craft::$app->getElements()->getElementById($targetOwnerId);
+                $owner = Craft::$app->getElements()->getElementById($targetOwnerId, null, $targetSiteId);
             } else {
                 $owner = $entry->getOwner();
             }
@@ -149,8 +149,8 @@ class CkeditorController extends Controller
         }
 
         $newAttrs = [];
-        if ($siteId !== null && $entry->siteId !== $siteId) {
-            $newAttrs['siteId'] = $siteId;
+        if ($targetSiteId !== null && $entry->siteId !== $targetSiteId) {
+            $newAttrs['siteId'] = $targetSiteId;
         }
         if ($targetOwnerId !== null && $entry->primaryOwnerId !== $targetOwnerId) {
             $newAttrs['primaryOwnerId'] = $targetOwnerId;
@@ -169,6 +169,7 @@ class CkeditorController extends Controller
 
         return $this->asJson([
             'newEntryId' => $newEntry->id,
+            'newSiteId' => $newEntry->siteId,
         ]);
     }
 

@@ -1,14 +1,21 @@
 {% extends '_layouts/cp.twig' %}
 {% set title = 'CKEditor Configs'|t('ckeditor') %}
 
+{% set readOnly = readOnly ?? false %}
+
 {% set crumbs = [
   { label: 'Settings'|t('app'), url: url('settings') }
 ] %}
 
 {% block actionButton %}
-  <a href="{{ url('settings/ckeditor/new') }}" class="btn submit add icon">{{ 'New config'|t('ckeditor') }}</a>
+  {% if not readOnly %}
+    <a href="{{ url('settings/ckeditor/new') }}" class="btn submit add icon">{{ 'New config'|t('ckeditor') }}</a>
+  {% endif %}
 {% endblock %}
 
+{% if readOnly %}
+  {% set contentNotice = readOnlyNotice() %}
+{% endif %}
 
 {% block content %}
   <div id="cke-configs-vue-admin-table"></div>
@@ -26,12 +33,17 @@ var columns = [
   { name: '__slot:title', title: Craft.t('app', 'Name') },
 ];
 
-new Craft.VueAdminTable({
+let config = {
   columns: columns,
   container: '#cke-configs-vue-admin-table',
-  deleteAction: 'ckeditor/cke-configs/delete',
   //deleteConfirmationMessage: Craft.t('app', 'Are you sure you want to delete “{name}” and all its entries?'),
   emptyMessage: Craft.t('app', 'No CKEditor configs exist yet.'),
   tableData: {{ tableData|json_encode|raw }}
-});
+}
+
+{% if not readOnly %}
+  config['deleteAction'] = 'ckeditor/cke-configs/delete';
+{% endif %}
+
+new Craft.VueAdminTable(config);
 {% endjs %}

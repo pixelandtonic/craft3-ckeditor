@@ -100,6 +100,10 @@ body:not(.dragging) .ckeditor-tb--item:hover {
   cursor: grab;
 }
 
+.disabled .ckeditor-tb--item:after {
+  cursor: not-allowed;
+}
+
 .ckeditor-tb--source .ck.ck-toolbar {
   border: none;
   padding: 0;

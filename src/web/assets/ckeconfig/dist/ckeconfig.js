@@ -18,12 +18,13 @@ const ToolbarBuilder = Garnish.Base.extend({
   $insertion: null,
   showingInsertion: !1,
   closestItem: null,
+  readOnly: !1,
   init: function(t, e, s, r = []) {
     this.$container = $(`#${t}`), this.$sourceContainer = this.$container.find(
       ".ckeditor-tb--source .ck-toolbar__items"
     ), this.$targetContainer = this.$container.find(
       ".ckeditor-tb--target .ck-toolbar__items"
-    ), this.$input = this.$container.find("input"), this.value = JSON.parse(this.$input.val());
+    ), this.$input = this.$container.find("input"), this.value = JSON.parse(this.$input.val()), this.readOnly = $(`#${t}`).hasClass("disabled");
     const a = document.createElement("DIV"), c = document.createElement("DIV");
     a.appendChild(c), create(c, {
       linkOptions: [{ elementType: "craft\\elements\\Asset" }],
@@ -50,14 +51,14 @@ const ToolbarBuilder = Garnish.Base.extend({
           }
         }
       }
-      this.drag = new Garnish.DragDrop({
+      this.readOnly ? this.drag = $() : this.drag = new Garnish.DragDrop({
         dropTargets: this.$targetContainer,
         helper: (n) => {
           const i = $(
             '<div class="offset-drag-helper ck ck-reset_all ck-editor ck-rounded-corners"/>'
-          ), o = $('<div class="ck ck-toolbar"/>').appendTo(
-            i
-          );
+          ), o = $(
+            '<div class="ck ck-toolbar"/>'
+          ).appendTo(i);
           return n.appendTo(o), i;
         },
         moveHelperToCursor: !0,
@@ -162,7 +163,7 @@ const ToolbarBuilder = Garnish.Base.extend({
     const t = $(
       '<div class="ckeditor-tb--item ckeditor-tb--separator" data-cke-tooltip-text="Separator"><span class="ck ck-toolbar__separator"/></div>'
     );
-    return this.drag.addItems(t), t;
+    return this.readOnly ? this.drag.add(t) : this.drag.addItems(t), t;
   },
   renderComponentGroup: function(t) {
     t = t.map(
@@ -186,7 +187,7 @@ const ToolbarBuilder = Garnish.Base.extend({
     if (!e.length)
       return !1;
     const r = $('<div class="ckeditor-tb--item"/>').append(e);
-    return r.attr("data-cke-tooltip-text", s.join(", ")), r.data("componentNames", t), this.drag.addItems(r), r;
+    return r.attr("data-cke-tooltip-text", s.join(", ")), r.data("componentNames", t), this.readOnly ? this.drag.add(r) : this.drag.addItems(r), r;
   },
   renderComponent: function(t) {
     const e = this.components[t];

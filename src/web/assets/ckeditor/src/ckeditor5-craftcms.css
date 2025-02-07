@@ -50,11 +50,7 @@ a.ck.ck-button:focus {
 }
 
 .ck.ck-editor__editable_inline {
-  padding: calc(var(--m) - 2px) var(--m)
-    calc(
-      var(--m) + var(--ck-powered-by-line-height) +
-        var(--ck-powered-by-padding-vertical)
-    ) !important;
+  padding: calc(var(--m) - 2px) var(--m) !important;
 }
 
 .ck.ck-editor__editable.ck-focused:not(.ck-editor__nested-editable) {
@@ -97,6 +93,11 @@ a.ck.ck-button:focus {
 }
 
 /* content */
+.ck.ck-content ul:last-child,
+.ck.ck-content ol:last-child {
+  padding-bottom: 0 !important;
+}
+
 .ck.ck-content[dir='ltr'] ul {
   padding-left: 40px;
 }
@@ -148,6 +149,20 @@ a.ck.ck-button:focus {
   margin: 0.9em auto; /* same as images */
   border-radius: var(--large-border-radius);
 }
+
+/* start fix for https://github.com/craftcms/ckeditor/issues/345 */
+.so-body .ck-toolbar_grouping {
+  position: relative !important;
+}
+
+.so-body .ck-toolbar_grouping .ck.ck-dropdown {
+  position: static;
+}
+
+.so-body .ck.ck-toolbar-dropdown > .ck-dropdown__panel {
+  width: 100%;
+}
+/* end fix */
 
 /* patch in https://github.com/ckeditor/ckeditor5/pull/15795 */
 .ck.ck-editor__editable_inline > :last-child,
