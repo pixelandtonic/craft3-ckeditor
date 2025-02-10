@@ -10,6 +10,7 @@ namespace craft\ckeditor;
 use Craft;
 use craft\base\Element;
 use craft\ckeditor\web\assets\BaseCkeditorPackageAsset;
+use craft\ckeditor\web\assets\ckeconfig\CkeConfigAsset;
 use craft\ckeditor\web\assets\ckeditor\CkeditorAsset;
 use craft\elements\NestedElementManager;
 use craft\events\AssetBundleEvent;
@@ -62,6 +63,19 @@ class Plugin extends \craft\base\Plugin
     {
         parent::init();
 
+        if (Craft::$app->getRequest()->getIsCpRequest()) {
+            $assetManager = Craft::$app->getAssetManager();
+            $view = Craft::$app->getView();
+
+            $ckBundle = $assetManager->getBundle(CkeditorAsset::class);
+            $configBundle = $assetManager->getBundle(CkeConfigAsset::class);
+
+            $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($ckBundle, 'ckeditor5-craftcms.js'));
+            $view->registerJsImport('@craftcms/ckeditor-config', $assetManager->getAssetUrl($configBundle, 'ckeconfig.js') );
+            $view->registerJsImport('ckeditor5', $ckBundle->baseUrl . '/lib/ckeditor5.js');
+            $view->registerJsImport('ckeditor5/', $ckBundle->baseUrl . '/lib/');
+        }
+
         Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function(RegisterComponentTypesEvent $event) {
             $event->types[] = Field::class;
         });
@@ -89,21 +103,6 @@ class Plugin extends \craft\base\Plugin
                     }
                 }
             }
-        });
-
-        Event::on(
-            View::class,
-            View::EVENT_REGISTER_JS_IMPORT_MAP,
-            function(RegisterJsImportEvent $event) {
-                /** @var View $view */
-                $view = $event->sender;
-
-                $bundle = $view->assetManager->getBundle(CkeditorAsset::class);
-
-                $event->imports['ckeditor5'] = $bundle->baseUrl . '/lib/ckeditor5.js';
-                $event->imports['ckeditor5/']  = $bundle->baseUrl .'/lib/';
-                $event->imports['ckeditor5/translations/'] = $bundle->baseUrl . '/lib/translations/';
-                $event->imports['@craftcms/ckeditor'] = $view->getAssetManager()->getAssetUrl($bundle, 'ckeditor5-craftcms.js');
         });
 
         Event::on(Element::class, Element::EVENT_AFTER_PROPAGATE, function(ModelEvent $event) {
