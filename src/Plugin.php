@@ -16,7 +16,6 @@ use craft\elements\NestedElementManager;
 use craft\events\AssetBundleEvent;
 use craft\events\ModelEvent;
 use craft\events\RegisterComponentTypesEvent;
-use craft\events\RegisterJsImportEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\services\Fields;
 use craft\web\UrlManager;
@@ -64,16 +63,17 @@ class Plugin extends \craft\base\Plugin
         parent::init();
 
         if (Craft::$app->getRequest()->getIsCpRequest()) {
-            $assetManager = Craft::$app->getAssetManager();
             $view = Craft::$app->getView();
+            $assetManager = $view->getAssetManager();
 
             $ckBundle = $assetManager->getBundle(CkeditorAsset::class);
-            $configBundle = $assetManager->getBundle(CkeConfigAsset::class);
-
-            $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($ckBundle, 'ckeditor5-craftcms.js'));
-            $view->registerJsImport('@craftcms/ckeditor-config', $assetManager->getAssetUrl($configBundle, 'ckeconfig.js') );
             $view->registerJsImport('ckeditor5', $ckBundle->baseUrl . '/lib/ckeditor5.js');
             $view->registerJsImport('ckeditor5/', $ckBundle->baseUrl . '/lib/');
+            $view->registerJsImport('ckeditor5/translations/', $ckBundle->baseUrl . '/lib/translations/');
+            $view->registerJsImport('@craftcms/ckeditor', $ckBundle->baseUrl . '/ckeditor5-craftcms.js');
+
+            $configBundle = $assetManager->getBundle(CkeConfigAsset::class);
+            $view->registerJsImport('@craftcms/ckeditor-config', $configBundle->baseUrl . '/ckeconfig.js');
         }
 
         Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function(RegisterComponentTypesEvent $event) {
@@ -99,7 +99,7 @@ class Plugin extends \craft\base\Plugin
                 foreach (array_keys(self::$ckeditorPackages) as $name) {
                     $bundle = $view->registerAssetBundle($name);
                     if ($bundle instanceof BaseCkeditorPackageAsset) {
-                        $bundle->registerPackage($view);
+                        $bundle->registerPackage();
                     }
                 }
             }

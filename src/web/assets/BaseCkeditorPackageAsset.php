@@ -10,7 +10,6 @@ namespace craft\ckeditor\web\assets;
 use Craft;
 use craft\ckeditor\helpers\CkeditorConfig;
 use craft\web\AssetBundle;
-use craft\web\View;
 
 /**
  * Base asset bundle class for DLL-compatible CKEditor packages.
@@ -86,10 +85,9 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
     /**
      * Registers the plugins and toolbar items provided by this package with `CKEditor5.craftcms.registerPackage()`.
      *
-     * @param View $view
      * @since 3.5.0
      */
-    public function registerPackage(View $view): void
+    public function registerPackage(): void
     {
         if (!empty($this->pluginNames || !empty($this->toolbarItems))) {
             CkeditorConfig::registerPackage($this->namespace, [
