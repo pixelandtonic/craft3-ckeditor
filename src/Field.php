@@ -965,7 +965,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             'baseConfig' => $baseConfig,
             'ckeConfig' => $ckeConfig,
             'toolbar' => $toolbar,
-            'extraPlugins' => []
+            'extraPlugins' => [],
         ]);
         $this->trigger(self::EVENT_MODIFY_CONFIG, $event);
 
@@ -1004,7 +1004,7 @@ JS;
         $plugins = collect($plugins)
             ->mapWithKeys(fn(array $plugins, string $import) => [
                 $import => collect($plugins)
-                    ->reject(fn($plugin) => in_array($plugin, $removePlugins->toArray()))
+                    ->reject(fn($plugin) => in_array($plugin, $removePlugins->toArray())),
             ]);
 
         $configPlugins = '[' . $plugins->flatten()->join(',') . ']';
@@ -1086,7 +1086,7 @@ JS,
                     'textPartLanguage' => static::textPartLanguage(),
                 ],
                 $this->showWordCount,
-                $this->wordLimit ?: 0
+                $this->wordLimit ?: 0,
             ],
             View::POS_END,
             ['type' => 'module']

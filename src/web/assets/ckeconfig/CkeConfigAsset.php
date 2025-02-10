@@ -8,9 +8,7 @@
 namespace craft\ckeditor\web\assets\ckeconfig;
 
 use craft\ckeditor\web\assets\ckeditor\CkeditorAsset;
-use craft\test\Craft;
 use craft\web\AssetBundle;
-use craft\web\View;
 
 /**
  * CKEditor custom build asset bundle
@@ -35,7 +33,7 @@ class CkeConfigAsset extends AssetBundle
      * @inheritdoc
      */
     public $js = [
-        ['ckeconfig.js', 'type' => 'module']
+        ['ckeconfig.js', 'type' => 'module'],
     ];
 
     /**

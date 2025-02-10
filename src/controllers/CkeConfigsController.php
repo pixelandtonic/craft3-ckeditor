@@ -101,7 +101,6 @@ class CkeConfigsController extends Controller
                     'jsonSchema' => CkeditorConfigSchema::create(),
                     'jsonSchemaUri' => $jsonSchemaUri,
                 ]);
-
             });
 
         if ($ckeConfig->uid) {

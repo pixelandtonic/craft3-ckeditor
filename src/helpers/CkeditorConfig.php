@@ -6,7 +6,6 @@ use Illuminate\Support\Collection;
 
 final class CkeditorConfig
 {
-
     private static array $pluginsByPackage = [
         'ckeditor5' => [
             'Paragraph',
@@ -67,7 +66,7 @@ final class CkeditorConfig
             'ImageEditor',
             'CraftLinkUI',
             'CraftEntries',
-        ]
+        ],
     ];
 
     public static array $toolbarItems = [
@@ -112,13 +111,12 @@ final class CkeditorConfig
     public static function registerPackage(string $name, array $config): void
     {
         self::$pluginsByPackage[$name] = $config['plugins'] ?? [];
-        self::$toolbarItems[] =  $config['toolbarItems'] ?? [];
+        self::$toolbarItems[] = $config['toolbarItems'] ?? [];
     }
 
     public static function getPluginPackages(): array
     {
         return array_keys(self::$pluginsByPackage);
-
     }
 
     public static function getPluginsByPackage(string $name = null): array
@@ -154,7 +152,7 @@ final class CkeditorConfig
     {
         if (is_string($item)) {
             return [
-                ['button' => $item]
+                ['button' => $item],
             ];
         }
 

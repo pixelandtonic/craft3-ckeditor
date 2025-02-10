@@ -92,7 +92,7 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
         if (!empty($this->pluginNames || !empty($this->toolbarItems))) {
             CkeditorConfig::registerPackage($this->namespace, [
                 'plugins' => $this->pluginNames,
-                'toolbarItems' => $this->toolbarItems
+                'toolbarItems' => $this->toolbarItems,
             ]);
         }
     }
