@@ -1016,14 +1016,20 @@ JS;
                 $carry->push('import { ' . $plugins->join(', ') . ' } from "' . $import . '";');
                 return $carry;
             }, Collection::empty())
-            ->join("\n");
+        ->join("\n");
+
+        // Add the translation import
+        $uiLanguage = BaseCkeditorPackageAsset::uiLanguage();
+        $translationImport = "import coreTranslations from 'ckeditor5/translations/$uiLanguage.js';";
 
         $view->registerScriptWithVars(fn($baseConfigJs, $toolbarJs, $languageJs, $showWordCountJs, $wordLimitJs) => <<<JS
 $imports
+$translationImport
 import {create} from '@craftcms/ckeditor';
 
 (($) => {
   const config = Object.assign({
+  translations: [coreTranslations],
       language: $languageJs,
   }, $baseConfigJs, $configOptionsJs, {
     plugins: $configPlugins,
@@ -1077,7 +1083,7 @@ JS,
                 $event->baseConfig,
                 $event->toolbar,
                 [
-                    'ui' => BaseCkeditorPackageAsset::uiLanguage(),
+                    'ui' => $uiLanguage,
                     'content' => $element?->getSite()->language ?? Craft::$app->language,
                     'textPartLanguage' => static::textPartLanguage(),
                 ],
