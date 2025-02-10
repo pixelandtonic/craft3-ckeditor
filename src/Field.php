@@ -895,8 +895,6 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
 
         $toolbar = array_values($toolbar);
 
-        $extraPlugins = [];
-
         $id = Html::id($this->handle);
         $idJs = Json::encode($view->namespaceInputId($id));
         $wordCountId = "$id-counts";
@@ -967,7 +965,7 @@ class Field extends HtmlField implements ElementContainerFieldInterface, Mergeab
             'baseConfig' => $baseConfig,
             'ckeConfig' => $ckeConfig,
             'toolbar' => $toolbar,
-            'extraPlugins' => $extraPlugins
+            'extraPlugins' => []
         ]);
         $this->trigger(self::EVENT_MODIFY_CONFIG, $event);
 
