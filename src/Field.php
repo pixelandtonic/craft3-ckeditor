@@ -994,7 +994,7 @@ JS;
         // for more info
         $removePlugins->push('MediaEmbedToolbar');
 
-        if (!$transforms || count($transforms) === 0) {
+        if (count($transforms) === 0) {
             $removePlugins->push('ImageTransforms');
         }
 
