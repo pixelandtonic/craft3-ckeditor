@@ -44,14 +44,4 @@ class CkeConfigAsset extends AssetBundle
     public $css = [
         'ckeditor.css',
     ];
-
-    public function registerAssetFiles($view)
-    {
-        parent::registerAssetFiles($view);
-
-        if ($view instanceof View) {
-            $configUrl = \Craft::$app->getAssetManager()->getAssetUrl($this, 'ckeconfig.js', false);
-            $view->registerJsImport('@craftcms/ckeditor-config', $configUrl);
-        }
-    }
 }
