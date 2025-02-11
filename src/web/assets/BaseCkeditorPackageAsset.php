@@ -33,6 +33,7 @@ abstract class BaseCkeditorPackageAsset extends AssetBundle
     {
         return match (Craft::$app->language) {
             'nb', 'nn' => 'no', // https://github.com/craftcms/ckeditor/issues/113
+            'en-us' => 'en',
             default => strtolower(Craft::$app->language),
         };
     }
