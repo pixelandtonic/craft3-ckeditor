@@ -67,10 +67,10 @@ class Plugin extends \craft\base\Plugin
             $assetManager = $view->getAssetManager();
 
             $ckBundle = $assetManager->getBundle(CkeditorAsset::class);
-            $view->registerJsImport('ckeditor5', $assetManager->getAssetUrl($ckBundle, '/lib/ckeditor5.js', false));
-            $view->registerJsImport('ckeditor5/', $assetManager->getAssetUrl($ckBundle, '/lib/', false));
-            $view->registerJsImport('ckeditor5/translations/', $assetManager->getAssetUrl($ckBundle, '/lib/translations/', false));
-            $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($ckBundle, '/ckeditor5-craftcms.js', false));
+            $view->registerJsImport('ckeditor5', $assetManager->getAssetUrl($ckBundle, 'lib/ckeditor5.js', false));
+            $view->registerJsImport('ckeditor5/', $assetManager->getAssetUrl($ckBundle, 'lib/', false));
+            $view->registerJsImport('ckeditor5/translations/', $assetManager->getAssetUrl($ckBundle, 'lib/translations/', false));
+            $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($ckBundle, 'ckeditor5-craftcms.js', false));
 
             $configBundle = $assetManager->getBundle(CkeConfigAsset::class);
             $view->registerJsImport('@craftcms/ckeditor-config', $configBundle->baseUrl . '/ckeconfig.js');
