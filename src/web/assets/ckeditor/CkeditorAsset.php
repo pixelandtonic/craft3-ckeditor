@@ -46,15 +46,15 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
      * @inheritdoc
      */
     public $js = [
-        'ckeditor5-dll.js',
-        'ckeditor5-craftcms.js',
+        ['ckeditor5-craftcms.js', 'type' => 'module'],
     ];
 
     /**
      * @inheritdoc
      */
     public $css = [
-        'css/ckeditor5-craftcms.css',
+        'lib/ckeditor5.css',
+        'ckeditor.css',
     ];
 
     public function registerAssetFiles($view): void
@@ -75,6 +75,7 @@ class CkeditorAsset extends BaseCkeditorPackageAsset
                 'Site: {name}',
                 'This field doesn’t allow nested entries.',
             ]);
+
             $view->registerJsWithVars(fn($attach) => <<<JS
 Craft.showCkeditorInspector = $attach;
 JS, [
@@ -94,12 +95,9 @@ JS, [
             }
         }
 
-        $view->registerJsWithVars(
-            fn($refHandles) => <<<JS
-window.CKEditor5.craftcms.localizedRefHandles = $refHandles;
-JS,
-            [$refHandles],
-            View::POS_END,
-        );
+        $view->registerScriptWithVars(fn($refHandles) => <<<JS
+import {setLocalizedRefHandles} from '@craftcms/ckeditor';
+setLocalizedRefHandles($refHandles);
+JS, [$refHandles], View::POS_END, ['type' => 'module']);
     }
 }

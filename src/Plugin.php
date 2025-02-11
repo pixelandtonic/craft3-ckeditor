@@ -10,6 +10,7 @@ namespace craft\ckeditor;
 use Craft;
 use craft\base\Element;
 use craft\ckeditor\web\assets\BaseCkeditorPackageAsset;
+use craft\ckeditor\web\assets\ckeconfig\CkeConfigAsset;
 use craft\ckeditor\web\assets\ckeditor\CkeditorAsset;
 use craft\elements\NestedElementManager;
 use craft\events\AssetBundleEvent;
@@ -61,6 +62,20 @@ class Plugin extends \craft\base\Plugin
     {
         parent::init();
 
+        if (Craft::$app->getRequest()->getIsCpRequest()) {
+            $view = Craft::$app->getView();
+            $assetManager = $view->getAssetManager();
+
+            $ckBundle = $assetManager->getBundle(CkeditorAsset::class);
+            $view->registerJsImport('ckeditor5', $assetManager->getAssetUrl($ckBundle, 'lib/ckeditor5.js', false));
+            $view->registerJsImport('ckeditor5/', $assetManager->getAssetUrl($ckBundle, 'lib/', false));
+            $view->registerJsImport('ckeditor5/translations/', $assetManager->getAssetUrl($ckBundle, 'lib/translations/', false));
+            $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($ckBundle, 'ckeditor5-craftcms.js', false));
+
+            $configBundle = $assetManager->getBundle(CkeConfigAsset::class);
+            $view->registerJsImport('@craftcms/ckeditor-config', $assetManager->getAssetUrl($configBundle, 'ckeconfig.js'));
+        }
+
         Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function(RegisterComponentTypesEvent $event) {
             $event->types[] = Field::class;
         });
@@ -84,7 +99,7 @@ class Plugin extends \craft\base\Plugin
                 foreach (array_keys(self::$ckeditorPackages) as $name) {
                     $bundle = $view->registerAssetBundle($name);
                     if ($bundle instanceof BaseCkeditorPackageAsset) {
-                        $bundle->registerPackage($view);
+                        $bundle->registerPackage();
                     }
                 }
             }

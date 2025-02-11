@@ -33,4 +33,10 @@ class ModifyConfigEvent extends Event
      * @since 4.1.0
      */
     public array $toolbar;
+
+    /**
+     * @var string[] $extraPlugins Additional first-party CKEditor plugins to load.
+     * @since 5.0
+     */
+    public array $extraPlugins;
 }
