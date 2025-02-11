@@ -1,5 +1,9 @@
 # Release Notes for CKEditor for Craft CMS
 
+## Unreleased
+
+- Added the ability to override entry type names and handles for CKEditor fields. ([#365](https://github.com/craftcms/ckeditor/issues/365))
+
 ## 4.5.0 - 2025-01-23
 
 - CKEditor now requires Craft CMS 5.6+.
