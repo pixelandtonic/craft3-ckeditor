@@ -73,7 +73,7 @@ class Plugin extends \craft\base\Plugin
             $view->registerJsImport('@craftcms/ckeditor', $assetManager->getAssetUrl($ckBundle, 'ckeditor5-craftcms.js', false));
 
             $configBundle = $assetManager->getBundle(CkeConfigAsset::class);
-            $view->registerJsImport('@craftcms/ckeditor-config', $configBundle->baseUrl . '/ckeconfig.js');
+            $view->registerJsImport('@craftcms/ckeditor-config', $assetManager->getAssetUrl($configBundle, 'ckeconfig.js'));
         }
 
         Event::on(Fields::class, Fields::EVENT_REGISTER_FIELD_TYPES, function(RegisterComponentTypesEvent $event) {
