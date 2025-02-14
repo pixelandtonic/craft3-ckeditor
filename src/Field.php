@@ -1205,6 +1205,10 @@ JS,
             return true;
         }
 
+        if ($this->sourceEditingGroups === null) {
+            return false;
+        }
+
         $sourceEditingGroups = array_flip($this->sourceEditingGroups);
 
         if ($user->admin && isset($sourceEditingGroups['__ADMINS__'])) {
